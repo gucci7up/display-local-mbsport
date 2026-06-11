@@ -1,0 +1,282 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+  }
+}
+
+/* Custom styles for MBSport display */
+.striped-badge {
+  background: repeating-linear-gradient(
+    90deg,
+    #111111 0px,
+    #111111 10px,
+    #ffffff 10px,
+    #ffffff 20px
+  );
+}
+
+.text-stroke-black {
+  -webkit-text-stroke: 1px #000000;
+}
+
+/* Hide scrollbars everywhere */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom glow animations */
+.glow-green {
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.glow-yellow {
+  text-shadow: 0 0 10px rgba(245, 197, 24, 0.6);
+}
+
+.glow-red {
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.border-glow-yellow {
+  box-shadow: 0 0 15px rgba(245, 197, 24, 0.35);
+  border-color: rgba(245, 197, 24, 0.5);
+}
+
+/* Ticker slide animation for seamless looping */
+@keyframes ticker-slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker-slide {
+  display: inline-block;
+  animation: ticker-slide 20s linear infinite;
+}
+
+/* Countdown urgent pulse/scale animation for final 5 seconds */
+@keyframes scale-pulse-red {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.95));
+  }
+}
+
+.animate-countdown-urgent {
+  animation: scale-pulse-red 1s infinite ease-in-out;
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.9);
+}
+
+/* Staggered slide up & glow entrance for results podium */
+@keyframes slide-up-glow {
+  0% {
+    transform: translateY(40px);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+    box-shadow: 0 0 25px var(--glow-color, rgba(245, 197, 24, 0.4));
+  }
+}
+
+.animate-result-card {
+  animation: slide-up-glow 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s ease-out forwards;
+}
+
+/* Scale up overlay animation */
+@keyframes scale-up {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-up {
+  animation: scale-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* TV Transition Animations */
+@keyframes fade-slide-dogs {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-dogs {
+  animation: fade-slide-dogs 450ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-elegant {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-lobby {
+  animation: fade-elegant 500ms ease-out forwards;
+}
+
+.animate-fade-odds {
+  animation: fade-elegant 400ms ease-out forwards;
+}
+
+.animate-fade-race {
+  animation: fade-elegant 400ms ease-out forwards;
+}
+
+@keyframes cinematic-fade-in {
+  0% {
+    opacity: 0;
+    filter: brightness(0);
+  }
+  30% {
+    opacity: 0.5;
+    filter: brightness(0.2);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.animate-cinematic-video {
+  animation: cinematic-fade-in 600ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fade-out-slide-up-results {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-out-slide-up-results {
+  animation: fade-out-slide-up-results 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stadium Background & Lights Breathing effect */
+.stadium-bg {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(245, 197, 24, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(0, 94, 255, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(255, 255, 255, 0.02) 0%, transparent 55%),
+    #050505;
+  position: relative;
+}
+
+.stadium-lights-breath {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% -25%, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+  animation: lights-breath 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes lights-breath {
+  0% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+/* Glassmorphic Panel Styles */
+.glass-panel {
+  background: rgba(12, 12, 12, 0.55) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Odds change flashing styles */
+.flash-green {
+  animation: glow-flash-green 1.5s ease-out forwards;
+}
+
+.flash-red {
+  animation: glow-flash-red 1.5s ease-out forwards;
+}
+
+@keyframes glow-flash-green {
+  0% {
+    color: #4ade80;
+    text-shadow: 0 0 15px rgba(74, 222, 128, 0.85);
+    transform: scale(1.12);
+  }
+  100% {
+    color: #f5c518;
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-flash-red {
+  0% {
+    color: #f87171;
+    text-shadow: 0 0 15px rgba(248, 113, 113, 0.85);
+    transform: scale(1.12);
+  }
+  100% {
+    color: #f5c518;
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
+}
+
+

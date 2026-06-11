@@ -1,0 +1,128 @@
+import axios from 'axios';
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
+const isDev = import.meta.env.DEV;
+const API_URL = isDev ? '/api-proxy' : (import.meta.env.VITE_API_URL || 'https://api.mbracesrd.lat');
+const DEFAULT_EMAIL = 'display@mbsport.com';
+const DEFAULT_PASSWORD = 'display123';
+
+class ApiService {
+  private client: AxiosInstance;
+  private token: string | null = null;
+  private isAuthenticating: Promise<string> | null = null;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: API_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Request interceptor to attach Bearer token
+    this.client.interceptors.request.use(
+      async (config: InternalAxiosRequestConfig) => {
+        // Skip attaching token for auth endpoints
+        if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
+          return config;
+        }
+
+        if (!this.token) {
+          // If not authenticated, trigger login and wait for it
+          try {
+            const token = await this.authenticate();
+            if (config.headers) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (err) {
+            console.error('Failed auto-authentication:', err);
+          }
+        } else {
+          if (config.headers) {
+            config.headers.Authorization = `Bearer ${this.token}`;
+          }
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor to handle token expiration (401)
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          this.token = null; // Reset token
+          try {
+            const token = await this.authenticate();
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return this.client(originalRequest);
+          } catch (authError) {
+            return Promise.reject(authError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // Method to perform login and get JWT token
+  private async authenticate(): Promise<string> {
+    if (this.isAuthenticating) {
+      return this.isAuthenticating;
+    }
+
+    this.isAuthenticating = (async () => {
+      try {
+        const response = await axios.post(`${API_URL}/auth/login`, {
+          email: DEFAULT_EMAIL,
+          password: DEFAULT_PASSWORD,
+        });
+        const token = response.data.accessToken;
+        this.token = token;
+        return token;
+      } catch (error) {
+        console.error('Authentication request failed:', error);
+        throw error;
+      } finally {
+        this.isAuthenticating = null;
+      }
+    })();
+
+    return this.isAuthenticating;
+  }
+
+  // API Endpoints
+  public async getCurrentRace() {
+    const response = await this.client.get('/races/current');
+    return response.data;
+  }
+
+  public async getRaceHistory(limit = 5) {
+    const response = await this.client.get(`/races/history?limit=${limit}`);
+    return response.data;
+  }
+
+  public async getLiveOdds(raceId: string) {
+    const response = await this.client.get(`/odds/race/${raceId}/live`);
+    return response.data;
+  }
+
+  public async getRaceResults(raceId: string) {
+    const response = await this.client.get(`/races/${raceId}/results`);
+    return response.data;
+  }
+
+  public async getVideoBlob(filename: string) {
+    const response = await this.client.get(`/videos/${filename}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+}
+
+export const api = new ApiService();

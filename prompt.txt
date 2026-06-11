@@ -1,0 +1,344 @@
+CREAR NUEVO PROYECTO COMPLETO
+
+NOMBRE:
+
+mbsport-display
+
+Repositorio independiente del POS.
+
+NO reutilizar rutas del POS.
+
+NO mezclar con mbsport-pos.
+
+El Display será una aplicación pública para televisores, monitores, pantallas LED y streaming.
+
+=================================================
+OBJETIVO
+========
+
+Crear la pantalla pública oficial de MBSPORT Racing Dogs.
+
+Consumirá datos desde:
+
+https://api.mbracesrd.lat
+
+Backend existente.
+
+=================================================
+TECNOLOGÍAS
+===========
+
+React
+Vite
+TypeScript
+TailwindCSS
+
+Preparar para:
+
+GSAP
+Socket.IO Client
+
+Docker
+Dokploy
+
+=================================================
+IDENTIDAD VISUAL
+================
+
+Usar exactamente la misma identidad visual del POS:
+
+Logo MBSPORT
+
+Colores:
+
+Amarillo dorado
+Negro
+Gris oscuro
+Verde
+Rojo
+
+Tipografía:
+
+Inter
+
+Mismos bordes.
+
+Mismas sombras.
+
+Mismo branding.
+
+=================================================
+RESOLUCIONES
+============
+
+Optimizar para:
+
+1920x1080
+
+Principal.
+
+Compatible también:
+
+1366x768
+2560x1440
+4K
+
+=================================================
+ESTRUCTURA
+==========
+
+Pantalla 1:
+
+LOBBY
+
+Pantalla 2:
+
+PRESENTACIÓN DE PERROS
+
+Pantalla 3:
+
+CUOTAS EN VIVO
+
+Pantalla 4:
+
+CARRERA EN CURSO
+
+Pantalla 5:
+
+RESULTADOS OFICIALES
+
+=================================================
+PANTALLA 1
+LOBBY
+=====
+
+Mostrar:
+
+MBSPORT RACING DOGS
+
+Carrera actual
+
+Hora actual
+
+Estado
+
+OPEN
+
+Cuenta regresiva
+
+Próxima carrera
+
+Últimos resultados
+
+Diseño espectacular para TV.
+
+=================================================
+PANTALLA 2
+PRESENTACIÓN DE PERROS
+======================
+
+Mostrar los 6 perros.
+
+Usar las mismas imágenes utilizadas en el POS.
+
+Cada perro debe mostrar:
+
+Número
+
+Nombre
+
+Color
+
+Cuota actual
+
+Ejemplo:
+
+1 BRAVO
+
+2 RELÁMPAGO
+
+3 TIGRE
+
+4 NEGRO
+
+5 FURIA
+
+6 BANDIDO
+
+Diseño tipo transmisión deportiva.
+
+=================================================
+PANTALLA 3
+CUOTAS EN VIVO
+==============
+
+Consumir:
+
+GET /races/current
+
+GET /odds/race/{raceId}/live
+
+Mostrar:
+
+Perro
+Cuota Ganar
+Cuota Exacta
+Cuota Trifecta
+
+Actualizar automáticamente.
+
+=================================================
+PANTALLA 4
+CARRERA EN CURSO
+================
+
+Preparar estructura para animación.
+
+Por ahora:
+
+Mostrar pista.
+
+Mostrar 6 carriles.
+
+Mostrar los 6 perros.
+
+Preparar componentes para futura animación GSAP.
+
+Estado:
+
+RUNNING
+
+=================================================
+PANTALLA 5
+RESULTADOS OFICIALES
+====================
+
+Consumir:
+
+GET /races/{id}/results
+
+Mostrar:
+
+🥇 Primer Lugar
+
+🥈 Segundo Lugar
+
+🥉 Tercer Lugar
+
+Exacta
+
+Trifecta
+
+Estado:
+
+OFICIAL
+
+=================================================
+API
+===
+
+Crear servicio central:
+
+src/services/api.ts
+
+Configurar:
+
+VITE_API_URL
+
+Consumir:
+
+GET /races/current
+
+GET /races/history
+
+GET /odds/race/{raceId}/live
+
+GET /races/{id}/results
+
+=================================================
+WEBSOCKET
+=========
+
+Preparar estructura para integración futura.
+
+NO implementar lógica compleja todavía.
+
+Crear:
+
+src/services/socket.ts
+
+=================================================
+ROUTER
+======
+
+Crear:
+
+/
+
+Lobby
+
+/dogs
+
+Presentación
+
+/odds
+
+Cuotas
+
+/race
+
+Carrera
+
+/results
+
+Resultados
+
+=================================================
+DOCKER
+======
+
+Crear:
+
+Dockerfile
+
+nginx.conf
+
+.dockerignore
+
+.env.example
+
+Compatible con Dokploy.
+
+=================================================
+RESPONSIVE
+==========
+
+No mostrar barras de scroll.
+
+Pensado para pantallas completas.
+
+Modo fullscreen.
+
+=================================================
+IMPORTANTE
+==========
+
+NO crear mocks excesivos.
+
+Consumir API real cuando sea posible.
+
+Preparar arquitectura limpia.
+
+Código modular.
+
+Listo para crecer con:
+
+Animaciones
+WebSocket
+Streaming
+Pantallas LED
+TVs
+
+Objetivo final:
+
+Una pantalla profesional de carreras de galgos tipo broadcast deportivo conectada al backend de MBSPORT.

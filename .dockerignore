@@ -12,7 +12,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 Dockerfile
-nginx.conf
 .dockerignore
 swagger.txt
 test.ps1

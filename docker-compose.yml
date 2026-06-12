@@ -1,0 +1,10 @@
+services:
+  display-mbsport:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-https://api.mbracesrd.lat}
+    restart: unless-stopped

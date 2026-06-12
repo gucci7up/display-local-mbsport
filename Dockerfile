@@ -8,6 +8,8 @@ RUN npm ci
 
 # Copy code and build
 COPY . .
+ARG VITE_API_URL=https://api.mbracesrd.lat
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Production

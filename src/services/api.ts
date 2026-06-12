@@ -1,8 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const isDev = import.meta.env.DEV;
-const API_URL = isDev ? '/api-proxy' : (import.meta.env.VITE_API_URL || 'https://api.mbracesrd.lat');
+const API_URL = '/api-proxy';
 const DEFAULT_EMAIL = 'display@mbsport.com';
 const DEFAULT_PASSWORD = 'display123';
 

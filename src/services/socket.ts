@@ -9,7 +9,7 @@ class SocketService {
     if (this.socket) return;
 
     this.socket = io(API_URL, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       autoConnect: true,
     });
 

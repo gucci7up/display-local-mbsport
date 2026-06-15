@@ -8,7 +8,7 @@ RUN npm ci
 
 # Copy code and build
 COPY . .
-ARG VITE_API_URL=https://api.mbracesrd.lat
+ARG VITE_API_URL=https://api.mbsport.lat
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 

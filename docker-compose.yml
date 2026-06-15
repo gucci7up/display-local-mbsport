@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-https://api.mbracesrd.lat}
+        VITE_API_URL: ${VITE_API_URL:-https://api.mbsport.lat}
     expose:
       - "80"
     restart: unless-stopped

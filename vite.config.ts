@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api-proxy': {
-        target: 'https://api.mbracesrd.lat',
+        target: 'https://api.mbsport.lat',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-proxy/, ''),
       },

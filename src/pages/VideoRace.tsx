@@ -49,7 +49,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
       const filename = archivoPath.split('/').pop() || `${currentRace.video.nombre}.webm`;
 
       // Log exact debugging info as requested by the user
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.mbracesrd.lat';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.mbsport.lat';
       const absoluteVideoUrl = `${baseUrl.replace(/\/+$/, '')}/videos/${filename}`;
       console.log(`Race Number: ${currentRace.numero}`);
       console.log(`Video Number: ${currentRace.video?.nombre || '---'}`);

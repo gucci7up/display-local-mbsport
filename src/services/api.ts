@@ -3,7 +3,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = '/api-proxy';
 const DEFAULT_EMAIL = 'display@mbsport.com';
-const DEFAULT_PASSWORD = 'display123';
+const DEFAULT_PASSWORD = '20260615';
 
 class ApiService {
   private client: AxiosInstance;

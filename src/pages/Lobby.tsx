@@ -101,17 +101,18 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
   return (
     <div className="flex-1 flex gap-6 p-6 overflow-hidden bg-black/40 select-none relative z-10">
       {/* Left Column: Últimos Resultados */}
-      <div className="w-[380px] flex flex-col rounded-lg p-4 shrink-0 glass-panel">
-        <h2 className="text-pos-yellow font-display font-extrabold text-xl tracking-wider mb-4 border-b border-pos-border pb-2">
-          ÚLTIMOS RESULTADOS
+      <div className="w-[380px] flex flex-col rounded-2xl p-4 shrink-0 glass-panel">
+        <h2 className="text-gradient-gold font-display font-extrabold text-xl tracking-wider mb-3 uppercase">
+          Últimos Resultados
         </h2>
+        <div className="gold-divider mb-4" />
 
         {/* Results List */}
         <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto">
           {raceHistory.length === 0 ? (
             // Mock Fallbacks matching ref-1.png if history is empty
             <>
-              <div className="flex items-center justify-between border-b border-pos-border pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                 <span className="text-gray-400 font-mono text-base font-bold">#396</span>
                 <span className="flex gap-2">
                   <span className="bg-pos-blue w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">2</span>
@@ -120,7 +121,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                 </span>
                 <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:28 PM</span>
               </div>
-              <div className="flex items-center justify-between border-b border-pos-border pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                 <span className="text-gray-400 font-mono text-base font-bold">#395</span>
                 <span className="flex gap-2">
                   <span className="bg-pos-orange w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">5</span>
@@ -129,7 +130,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                 </span>
                 <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:21 PM</span>
               </div>
-              <div className="flex items-center justify-between border-b border-pos-border pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                 <span className="text-gray-400 font-mono text-base font-bold">#394</span>
                 <span className="flex gap-2">
                   <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black">3</span>
@@ -138,7 +139,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                 </span>
                 <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:14 PM</span>
               </div>
-              <div className="flex items-center justify-between border-b border-pos-border pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                 <span className="text-gray-400 font-mono text-base font-bold">#393</span>
                 <span className="flex gap-2">
                   <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black striped-badge text-stroke-black">6</span>
@@ -147,7 +148,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                 </span>
                 <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:07 PM</span>
               </div>
-              <div className="flex items-center justify-between border-b border-pos-border pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                 <span className="text-gray-400 font-mono text-base font-bold">#392</span>
                 <span className="flex gap-2">
                   <span className="bg-pos-red w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">1</span>
@@ -161,7 +162,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
             raceHistory.map((race) => {
               const resParts = race.resultado ? race.resultado.split('-') : [];
               return (
-                <div key={race.id} className="flex items-center justify-between border-b border-pos-border pb-2.5">
+                <div key={race.id} className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
                   <span className="text-gray-400 font-mono text-base font-bold">#{race.numero}</span>
                   <span className="flex gap-2">
                     {resParts.map((num: string, idx: number) => {
@@ -199,20 +200,20 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
         {DOGS_METADATA.map((dog) => (
           <div
             key={dog.id}
-            className="flex flex-col rounded-lg overflow-hidden relative shadow-lg transition-all duration-300 glass-panel"
+            className="flex flex-col rounded-2xl overflow-hidden relative shadow-card transition-all duration-300 glass-panel premium-card"
             style={getLaneGlowStyle(dog.id)}
           >
             {/* Pulsing Gold Favorite Badge */}
             {dog.id === getFavoriteDogId() && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-display font-black text-[9px] px-2.5 py-0.5 rounded-full border border-black/40 shadow-md animate-pulse uppercase tracking-widest z-10">
+              <span className="absolute top-2 right-2 flex items-center gap-1 bg-gold-gradient text-black font-display font-black text-[9px] px-2.5 py-1 rounded-full shadow-gold-glow animate-pulse uppercase tracking-widest z-10">
                 ★ FAVORITO
               </span>
             )}
             {/* Card Header (Badge + Name) */}
-            <div className="flex items-center gap-3 p-3 bg-black/50 border-b border-pos-border">
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-b from-white/[0.04] to-transparent border-b border-white/[0.06]">
               {/* Badge Number */}
               <div
-                className={`w-10 h-10 rounded flex items-center justify-center font-display font-black text-2xl border border-black/50`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center font-display font-black text-2xl border border-black/50 shadow-md`}
                 style={{
                   background: dog.isStripes
                     ? 'repeating-linear-gradient(45deg, #111 0px, #111 6px, #fff 6px, #fff 12px)'
@@ -238,11 +239,11 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
             </div>
 
             {/* Card Footer: Odds */}
-            <div className="p-2.5 bg-black/60 border-t border-pos-border flex flex-col items-center justify-center">
+            <div className="p-2.5 bg-black/50 border-t border-white/[0.06] flex flex-col items-center justify-center">
               <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase">
                 GANAR
               </span>
-              <span className="text-2xl leading-none mt-0.5">
+              <span className="text-2xl leading-none mt-0.5 text-pos-yellow font-bold">
                 <LiveOddsValue value={getDogOdds(dog.id)} />
               </span>
             </div>

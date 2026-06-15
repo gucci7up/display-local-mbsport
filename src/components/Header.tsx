@@ -132,42 +132,44 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const headerClass = isTransparent
-    ? "flex items-center justify-between px-6 py-3 bg-gradient-to-b from-black/85 via-black/45 to-transparent select-none z-10 shrink-0 border-b-0 shadow-none"
-    : "flex items-center justify-between px-6 py-3 border-b border-pos-border bg-gradient-to-b from-pos-gray/60 via-black to-black select-none z-10 shrink-0 shadow-lg";
+    ? "relative flex items-center justify-between px-6 py-3 bg-gradient-to-b from-black/85 via-black/45 to-transparent select-none z-10 shrink-0 border-b-0 shadow-none"
+    : "relative flex items-center justify-between px-6 py-3 bg-gradient-to-b from-surface-2/80 via-pos-bg to-black select-none z-10 shrink-0 shadow-card";
+
+  const chipClass = "flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] text-center backdrop-blur-sm";
 
   return (
     <header className={headerClass}>
       {/* Left Section: Logo & Status info */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-7">
         {/* Brand Logo */}
         <div className="flex flex-col items-center">
-          <img src="/logo.png" alt="MBSport Logo" className="h-14 object-contain" />
-          <span className="text-[9px] font-bold text-gray-500 tracking-[0.3em] uppercase -mt-2">
+          <img src="/logo.png" alt="MBSport Logo" className="h-14 object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]" />
+          <span className="text-[9px] font-bold text-gray-500 tracking-[0.35em] uppercase -mt-2">
             Racing Dogs
           </span>
         </div>
 
         {/* Vertical Divider */}
-        <div className="h-10 w-[1px] bg-pos-border" />
+        <div className="h-10 w-[1px] bg-gradient-to-b from-transparent via-pos-border to-transparent" />
 
         {/* Panels Container */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Carrera Info */}
-          <div className="flex flex-col items-center justify-center bg-pos-gray/40 border border-pos-border/40 rounded px-4 py-1 shadow-[inset_0_0_10px_rgba(255,255,255,0.01)] text-center min-w-[95px] h-[52px]">
+          <div className={`${chipClass} px-4 py-1 min-w-[95px] h-[52px]`}>
             <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1">CARRERA</span>
-            <span className="text-3xl font-extrabold text-pos-yellow font-display leading-none drop-shadow-[0_0_8px_rgba(245,197,24,0.3)]">
+            <span className="text-3xl font-extrabold font-display leading-none text-gradient-gold drop-shadow-[0_0_10px_rgba(245,197,24,0.25)]">
               {raceNumber || '---'}
             </span>
           </div>
 
           {/* Estado Info */}
-          <div className="flex flex-col items-center justify-center bg-pos-gray/40 border border-pos-border/40 rounded px-4 py-1 shadow-[inset_0_0_10px_rgba(255,255,255,0.01)] text-center min-w-[135px] h-[52px]">
+          <div className={`${chipClass} px-4 py-1 min-w-[135px] h-[52px]`}>
             <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1.5">ESTADO</span>
             {getStatusBadge(status)}
           </div>
 
           {/* Countdown Info */}
-          <div className="flex flex-col items-center justify-center bg-pos-gray/40 border border-pos-border/40 rounded px-5 py-1 shadow-[inset_0_0_10px_rgba(255,255,255,0.01)] text-center min-w-[160px] h-[52px]">
+          <div className={`${chipClass} px-5 py-1 min-w-[160px] h-[52px]`}>
             <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1.5">
               PRÓXIMA CARRERA EN
             </span>
@@ -189,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold transition-all duration-300 ${
               autoMode
                 ? 'bg-pos-green/20 border-pos-green-light text-pos-green-light shadow-[0_0_12px_rgba(34,197,94,0.45)]'
-                : 'bg-pos-gray border-pos-border text-gray-400 hover:text-white'
+                : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white'
             }`}
           >
             <span className={`w-2.5 h-2.5 rounded-full ${autoMode ? 'bg-pos-green-light animate-pulse shadow-[0_0_8px_#22c55e]' : 'bg-gray-500'}`} />
@@ -198,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Clock */}
-        <div className="flex flex-col items-end bg-pos-gray/40 border border-pos-border/40 rounded px-4 py-1.5 shadow-[inset_0_0_10px_rgba(255,255,255,0.01)] min-w-[130px] h-[52px] justify-center">
+        <div className={`${chipClass} items-end px-4 py-1.5 min-w-[130px] h-[52px] justify-center`}>
           <span className="text-xl font-bold font-mono text-white tracking-wide leading-none">
             {timeStr}
           </span>
@@ -207,6 +209,11 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Bottom gold accent line */}
+      {!isTransparent && (
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gold-line" />
+      )}
     </header>
   );
 };

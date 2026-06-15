@@ -237,11 +237,47 @@
 
 /* Glassmorphic Panel Styles */
 .glass-panel {
-  background: rgba(12, 12, 12, 0.55) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+  background: linear-gradient(165deg, rgba(28, 28, 32, 0.65) 0%, rgba(10, 10, 12, 0.6) 60%) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 10px 36px 0 rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+  position: relative;
+}
+
+/* Subtle top sheen for a premium glass edge */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 35%);
+  pointer-events: none;
+}
+
+/* Lift on hover for interactive premium cards */
+.premium-card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Gold gradient text for premium accents */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FFE9A8 0%, #F5C518 45%, #C9960A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Thin gold gradient divider line */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 197, 24, 0.55), transparent);
 }
 
 /* Odds change flashing styles */

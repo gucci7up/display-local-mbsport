@@ -29,6 +29,17 @@ export default {
         'pos-gray': '#1e1e1e',
         'pos-border': '#2a2a2a',
         'pos-text': '#e8e8e8',
+        'surface': '#121214',
+        'surface-2': '#1b1b1f',
+      },
+      boxShadow: {
+        'gold-glow': '0 0 30px rgba(245, 197, 24, 0.22)',
+        'card': '0 4px 24px rgba(0, 0, 0, 0.4)',
+        'card-hover': '0 10px 40px rgba(0, 0, 0, 0.55)',
+      },
+      backgroundImage: {
+        'gold-gradient': 'linear-gradient(135deg, #FFE9A8 0%, #F5C518 45%, #C9960A 100%)',
+        'gold-line': 'linear-gradient(90deg, transparent, rgba(245,197,24,0.6), transparent)',
       },
       animation: {
         'blink': 'blink 1s step-end infinite',

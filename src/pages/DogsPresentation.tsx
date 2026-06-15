@@ -64,20 +64,20 @@ export const DogsPresentation: React.FC<DogsPresentationProps> = ({ liveOdds }) 
         {DOGS_METADATA.map((dog) => (
           <div
             key={dog.id}
-            className="flex flex-col rounded-lg overflow-hidden relative shadow-lg transition-all duration-300 glass-panel"
+            className="flex flex-col rounded-2xl overflow-hidden relative shadow-card transition-all duration-300 glass-panel premium-card"
             style={getLaneGlowStyle(dog.id)}
           >
             {/* Pulsing Gold Favorite Badge */}
             {dog.id === getFavoriteDogId() && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-display font-black text-[9px] px-2.5 py-0.5 rounded-full border border-black/40 shadow-md animate-pulse uppercase tracking-widest z-10">
+              <span className="absolute top-2 right-2 flex items-center gap-1 bg-gold-gradient text-black font-display font-black text-[9px] px-2.5 py-1 rounded-full shadow-gold-glow animate-pulse uppercase tracking-widest z-10">
                 ★ FAVORITO
               </span>
             )}
             {/* Column Header (Badge + Name) */}
-            <div className="flex flex-col items-center gap-2 p-3 bg-black/60 border-b border-pos-border">
+            <div className="flex flex-col items-center gap-2 p-3 bg-gradient-to-b from-white/[0.04] to-transparent border-b border-white/[0.06]">
               {/* Badge */}
               <div
-                className={`w-12 h-12 rounded flex items-center justify-center font-display font-black text-3xl border border-black/50`}
+                className={`w-12 h-12 rounded-lg flex items-center justify-center font-display font-black text-3xl border border-black/50 shadow-md`}
                 style={{
                   background: dog.isStripes
                     ? 'repeating-linear-gradient(45deg, #111 0px, #111 6px, #fff 6px, #fff 12px)'
@@ -103,11 +103,11 @@ export const DogsPresentation: React.FC<DogsPresentationProps> = ({ liveOdds }) 
             </div>
 
             {/* Column Footer (Odds) */}
-            <div className="p-3 bg-black/75 border-t border-pos-border flex flex-col items-center justify-center">
+            <div className="p-3 bg-black/50 border-t border-white/[0.06] flex flex-col items-center justify-center">
               <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase">
                 GANAR
               </span>
-              <span className="text-3xl leading-none mt-1">
+              <span className="text-3xl leading-none mt-1 text-pos-yellow font-bold">
                 <LiveOddsValue value={getDogOdds(dog.id)} />
               </span>
             </div>
@@ -116,8 +116,8 @@ export const DogsPresentation: React.FC<DogsPresentationProps> = ({ liveOdds }) 
       </div>
 
       {/* Bottom Branding Banner */}
-      <div className="h-10 flex items-center justify-center gap-2 border-t border-pos-border bg-pos-bg/50 rounded-lg shrink-0">
-        <span className="font-display font-black text-pos-yellow tracking-wider text-base">MB</span>
+      <div className="h-10 flex items-center justify-center gap-2 rounded-2xl shrink-0 glass-panel">
+        <span className="font-display font-black text-gradient-gold tracking-wider text-base">MB</span>
         <span className="font-display font-black text-white tracking-wider text-base">SPORT</span>
         <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase ml-1">
           Racing Dogs

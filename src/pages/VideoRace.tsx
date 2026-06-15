@@ -157,8 +157,8 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
       {/* 1. STARTING BANNER OVERLAY */}
       {showStartingBanner && !isLoading && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 animate-fade-in">
-          <div className="text-center p-10 bg-gradient-to-b from-pos-gray/90 to-black/95 rounded-3xl border-2 border-pos-yellow shadow-[0_0_60px_rgba(245,197,24,0.4)] animate-scale-up">
-            <h1 className="font-display font-black text-6xl md:text-8xl text-pos-yellow tracking-widest leading-none drop-shadow-[0_0_20px_rgba(245,197,24,0.7)]">
+          <div className="text-center p-10 rounded-3xl shadow-gold-glow animate-scale-up glass-panel" style={{ boxShadow: '0 0 60px rgba(245,197,24,0.35)', borderColor: 'rgba(245,197,24,0.5)' }}>
+            <h1 className="font-display font-black text-6xl md:text-8xl text-gradient-gold tracking-widest leading-none">
               🏁 STARTING RACE
             </h1>
             <p className="text-gray-300 font-display font-black tracking-[0.25em] text-lg md:text-2xl uppercase mt-5">
@@ -176,9 +176,9 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
       {/* 2. LOADING STATE */}
       {isLoading && (
         <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-40">
-          <div className="flex flex-col items-center p-8 bg-pos-gray/40 rounded-2xl border border-pos-border shadow-2xl">
+          <div className="flex flex-col items-center p-8 rounded-2xl shadow-card glass-panel">
             <div className="w-16 h-16 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" />
-            <h2 className="text-pos-yellow font-display font-black text-xl tracking-widest mt-6 uppercase">
+            <h2 className="text-gradient-gold font-display font-black text-xl tracking-widest mt-6 uppercase">
               Conectando con la Transmisión
             </h2>
             <p className="text-gray-400 font-mono text-xs mt-2 uppercase tracking-wider">
@@ -210,16 +210,16 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
           
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pos-yellow/5 rounded-full blur-[100px] pointer-events-none animate-pulse" />
           
-          <div className="text-center z-10 max-w-2xl bg-black/85 border border-pos-border p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+          <div className="text-center z-10 max-w-2xl p-8 rounded-3xl shadow-card glass-panel">
             <div className="inline-flex items-center gap-3 bg-red-600/90 text-white font-display font-black text-sm tracking-widest px-6 py-2 rounded-full border border-red-500 uppercase animate-pulse mb-6">
               <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
               Transmisión de Contingencia
             </div>
-            
+
             <h1 className="font-display font-black text-white text-5xl tracking-wide uppercase leading-none">
               CARRERA {currentRace?.numero || '---'}
             </h1>
-            
+
             <p className="text-gray-400 font-display font-bold tracking-widest text-sm uppercase mt-3">
               GALGOS EN COMPETENCIA - CIRCUITO MBSPORT
             </p>
@@ -228,12 +228,12 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
             <div className="mt-8 flex justify-center relative">
               <div className="w-40 h-40 rounded-full border-4 border-pos-border flex flex-col items-center justify-center relative shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
                 {/* Spinning border overlay */}
-                <div 
+                <div
                   className="absolute inset-0 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin"
                   style={{ animationDuration: '6s' }}
                 />
                 <span className="text-[10px] font-black text-gray-500 tracking-widest uppercase">CRONÓMETRO</span>
-                <span className="text-4xl font-extrabold text-pos-yellow font-mono mt-1 tracking-wider leading-none">
+                <span className="text-4xl font-extrabold text-gradient-gold font-mono mt-1 tracking-wider leading-none">
                   {formatSeconds(fallbackCountdown)}
                 </span>
                 <span className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">EN CURSO</span>
@@ -242,8 +242,8 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
 
             {/* Track Progress Bar */}
             <div className="w-full bg-pos-gray/80 border border-pos-border h-3.5 rounded-full mt-8 overflow-hidden relative">
-              <div 
-                className="bg-gradient-to-r from-pos-yellow to-amber-500 h-full rounded-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(245,197,24,0.5)]"
+              <div
+                className="bg-gold-gradient h-full rounded-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(245,197,24,0.5)]"
                 style={{ width: `${(progress * 100).toFixed(1)}%` }}
               />
             </div>
@@ -252,14 +252,6 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
               <span>META</span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* 5. HUD OVERLAYS (SPORTS BROADCAST THEME) */}
-      {!showStartingBanner && !isLoading && (
-        <div className="absolute top-24 right-6 flex items-center gap-2 bg-black/80 border border-pos-border px-4 py-2 rounded-xl shadow-2xl backdrop-blur-md text-xs font-display font-black tracking-widest uppercase text-white pointer-events-none z-10">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-          <span className="text-red-500 animate-pulse">TRANSMISIÓN EN VIVO</span>
         </div>
       )}
 

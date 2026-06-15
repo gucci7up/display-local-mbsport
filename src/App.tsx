@@ -310,27 +310,30 @@ function App() {
           {renderScreen()}
         </div>
 
-        {/* ESPN-STYLE TICKER (Redesigned with state-aware messaging, font-sans and tracking spacing for maximum legibility) */}
-        <div className="h-10 bg-pos-yellow border-t border-b border-black text-black font-sans text-sm flex items-center overflow-hidden shrink-0 z-20 relative select-none">
-          {/* Label fixo left */}
-          <div className="h-full bg-black text-pos-yellow px-5 flex items-center shrink-0 z-30 font-extrabold border-r border-pos-yellow uppercase tracking-widest text-xs gap-2">
+        {/* PREMIUM TICKER: dark broadcast bar with gold accents */}
+        <div className="h-10 bg-gradient-to-r from-surface-2 via-pos-bg to-surface-2 border-t border-white/[0.06] text-pos-text font-sans text-sm flex items-center overflow-hidden shrink-0 z-20 relative select-none">
+          {/* Top gold accent line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gold-line" />
+
+          {/* Label fixed left */}
+          <div className="h-full bg-black/60 text-gradient-gold px-5 flex items-center shrink-0 z-30 font-extrabold border-r border-white/[0.06] uppercase tracking-widest text-xs gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_#dc2626]" />
             INFO EN VIVO
           </div>
           {/* Loop horizontal text */}
           <div className="relative w-full overflow-hidden h-full flex items-center z-10">
-            <div className="animate-ticker-slide whitespace-nowrap flex items-center gap-16 pl-8 uppercase tracking-wider font-bold text-[13px] shrink-0">
+            <div className="animate-ticker-slide whitespace-nowrap flex items-center gap-16 pl-8 uppercase tracking-wider font-semibold text-[13px] shrink-0 text-gray-300">
               {getTickerMessages().map((msg, idx) => (
                 <Fragment key={idx}>
-                  {idx > 0 && <span className="text-black/30 text-base font-black shrink-0">•</span>}
+                  {idx > 0 && <span className="text-pos-yellow/40 text-base font-black shrink-0">•</span>}
                   <span className="shrink-0">{msg}</span>
                 </Fragment>
               ))}
-              <span className="text-black/30 text-base font-black shrink-0">•</span>
+              <span className="text-pos-yellow/40 text-base font-black shrink-0">•</span>
               {/* Duplicating for seamless loop */}
               {getTickerMessages().map((msg, idx) => (
                 <Fragment key={`dup-${idx}`}>
-                  {idx > 0 && <span className="text-black/30 text-base font-black shrink-0">•</span>}
+                  {idx > 0 && <span className="text-pos-yellow/40 text-base font-black shrink-0">•</span>}
                   <span className="shrink-0">{msg}</span>
                 </Fragment>
               ))}

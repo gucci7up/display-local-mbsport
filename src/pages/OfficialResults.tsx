@@ -54,33 +54,35 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
 
   // Helper to draw place cards
   const renderPlaceCard = (dog: DogInfo, place: '1°' | '2°' | '3°', bgGradient: string, delay: string) => {
-    const medal = place === '1°' ? '🥇' : place === '2°' ? '🥈' : '🥉';
-    
     // Custom colors requested by user (Oro, Plata, Bronce)
-    const glowConfig = {
-      '1°': { border: '#FFD700', glow: 'rgba(255, 215, 0, 0.6)' },
-      '2°': { border: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.5)' },
-      '3°': { border: '#CD7F32', glow: 'rgba(205, 127, 50, 0.5)' },
+    const podiumConfig = {
+      '1°': { border: '#FFD700', glow: 'rgba(255, 215, 0, 0.6)', badge: 'linear-gradient(135deg, #FFE9A8 0%, #F5C518 45%, #C9960A 100%)', textColor: '#1a1300' },
+      '2°': { border: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.5)', badge: 'linear-gradient(135deg, #F2F2F2 0%, #C0C0C0 45%, #8c8c8c 100%)', textColor: '#1a1a1a' },
+      '3°': { border: '#CD7F32', glow: 'rgba(205, 127, 50, 0.5)', badge: 'linear-gradient(135deg, #E3A468 0%, #CD7F32 45%, #8a521c 100%)', textColor: '#1a0f00' },
     }[place];
+    const placeNumber = place.replace('°', '');
 
     return (
-      <div 
-        className="flex items-center gap-6 p-4 rounded-xl border relative overflow-hidden h-[95px] animate-result-card"
+      <div
+        className="flex items-center gap-6 p-4 rounded-2xl border relative overflow-hidden h-[95px] animate-result-card glass-panel"
         style={{
           backgroundImage: `linear-gradient(to right, ${bgGradient})`,
           animationDelay: delay,
-          borderColor: glowConfig.border,
-          boxShadow: `0 0 20px ${glowConfig.glow}, inset 0 0 10px ${glowConfig.glow}`,
+          borderColor: podiumConfig.border,
+          boxShadow: `0 0 20px ${podiumConfig.glow}, inset 0 0 10px ${podiumConfig.glow}`,
         } as React.CSSProperties}
       >
         {/* Place Indicator */}
-        <div className="flex items-center justify-center font-display font-black text-4xl text-white w-18 border-r border-white/20 pr-4 italic shrink-0">
-          <span className="mr-1.5 text-2xl">{medal}</span>{place}
+        <div
+          className="flex items-center justify-center font-display font-black text-3xl w-14 h-14 rounded-full shrink-0 shadow-lg"
+          style={{ background: podiumConfig.badge, color: podiumConfig.textColor }}
+        >
+          {placeNumber}°
         </div>
 
         {/* Badge */}
         <div
-          className={`w-12 h-12 rounded flex items-center justify-center font-display font-black text-3xl border border-black/50 shrink-0`}
+          className={`w-12 h-12 rounded-lg flex items-center justify-center font-display font-black text-3xl border border-black/50 shrink-0 shadow-md`}
           style={{
             background: dog.isStripes
               ? 'repeating-linear-gradient(45deg, #111 0px, #111 6px, #fff 6px, #fff 12px)'
@@ -116,14 +118,15 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
   return (
     <div className="flex-1 flex flex-col p-6 bg-black select-none overflow-hidden relative">
       {/* Title Bar */}
-      <div className="flex items-center justify-between border-b border-pos-border pb-3 shrink-0">
+      <div className="flex items-center justify-between pb-3 shrink-0">
         <span className="font-display font-black text-white text-xl tracking-wider uppercase">
-          RESULTADO OFICIAL - CARRERA {raceNumber}
+          Resultado Oficial · Carrera {raceNumber}
         </span>
-        <span className="font-display font-extrabold text-pos-yellow text-lg tracking-wider uppercase">
-          FINALIZADA
+        <span className="font-display font-extrabold text-gradient-gold text-lg tracking-wider uppercase">
+          Finalizada
         </span>
       </div>
+      <div className="gold-divider" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex gap-6 my-4 overflow-hidden">
@@ -142,13 +145,12 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
         {/* Right Column: Special Bets Results */}
         <div className="w-[320px] flex flex-col justify-between shrink-0 py-2 gap-4">
           {/* EXACTA Card */}
-          <div 
-            className="flex-1 flex flex-col justify-center border border-pos-border bg-pos-bg rounded-xl p-4 text-center animate-result-card"
+          <div
+            className="flex-1 flex flex-col justify-center rounded-2xl p-4 text-center animate-result-card glass-panel"
             style={{
               animationDelay: '0.6s',
-              '--glow-color': 'rgba(245, 197, 24, 0.45)',
-              boxShadow: '0 0 25px var(--glow-color), inset 0 0 15px rgba(245, 197, 24, 0.05)',
-              borderColor: 'rgba(245, 197, 24, 0.5)',
+              boxShadow: '0 0 25px rgba(245, 197, 24, 0.25), inset 0 0 15px rgba(245, 197, 24, 0.05)',
+              borderColor: 'rgba(245, 197, 24, 0.35)',
             } as React.CSSProperties}
           >
             <span className="text-xs font-black text-gray-500 tracking-widest font-display uppercase">
@@ -157,19 +159,18 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
             <span className="text-3xl font-extrabold text-white font-mono mt-2 tracking-wider">
               {exactaStr}
             </span>
-            <span className="text-3xl font-extrabold text-pos-yellow font-display mt-2 drop-shadow-[0_0_8px_rgba(245,197,24,0.3)]">
+            <span className="text-3xl font-extrabold text-gradient-gold font-display mt-2">
               {exactaOdds}
             </span>
           </div>
 
           {/* TRIFECTA Card */}
-          <div 
-            className="flex-1 flex flex-col justify-center border border-pos-border bg-pos-bg rounded-xl p-4 text-center animate-result-card"
+          <div
+            className="flex-1 flex flex-col justify-center rounded-2xl p-4 text-center animate-result-card glass-panel"
             style={{
               animationDelay: '0.8s',
-              '--glow-color': 'rgba(245, 197, 24, 0.45)',
-              boxShadow: '0 0 25px var(--glow-color), inset 0 0 15px rgba(245, 197, 24, 0.05)',
-              borderColor: 'rgba(245, 197, 24, 0.5)',
+              boxShadow: '0 0 25px rgba(245, 197, 24, 0.25), inset 0 0 15px rgba(245, 197, 24, 0.05)',
+              borderColor: 'rgba(245, 197, 24, 0.35)',
             } as React.CSSProperties}
           >
             <span className="text-xs font-black text-gray-500 tracking-widest font-display uppercase">
@@ -178,7 +179,7 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
             <span className="text-3xl font-extrabold text-white font-mono mt-2 tracking-wider">
               {trifectaStr}
             </span>
-            <span className="text-3xl font-extrabold text-pos-yellow font-display mt-2 drop-shadow-[0_0_8px_rgba(245,197,24,0.3)]">
+            <span className="text-3xl font-extrabold text-gradient-gold font-display mt-2">
               {trifectaOdds}
             </span>
           </div>
@@ -186,8 +187,8 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
       </div>
 
       {/* Bottom Branding Banner */}
-      <div className="h-10 flex items-center justify-center gap-2 border-t border-pos-border bg-pos-bg/50 rounded-lg shrink-0">
-        <span className="font-display font-black text-pos-yellow tracking-wider text-base">MB</span>
+      <div className="h-10 flex items-center justify-center gap-2 rounded-2xl shrink-0 glass-panel">
+        <span className="font-display font-black text-gradient-gold tracking-wider text-base">MB</span>
         <span className="font-display font-black text-white tracking-wider text-base">SPORT</span>
         <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase ml-1">
           Racing Dogs

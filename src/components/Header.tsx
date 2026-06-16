@@ -188,15 +188,13 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* JACKPOT counter */}
-        {jackpotAmount > 0 && (
-          <div style={{ ...chip('#C98A00'), minWidth: 150, borderTop: '2px solid #C98A00', animation: 'jackpot-counter-glow 2.5s ease-in-out infinite alternate' }}>
-            <span style={{ ...label, color: '#B8963A' }}>💰 Jackpot</span>
-            <span style={{ fontSize: 20, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, background: 'linear-gradient(135deg,#FFE9A8,#F5C518)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              ${jackpotAmount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-        )}
+        {/* JACKPOT counter — siempre visible */}
+        <div style={{ ...chip('#C98A00'), minWidth: 158, borderTop: '2px solid #C98A00', animation: 'jackpot-counter-glow 2.5s ease-in-out infinite alternate' }}>
+          <span style={{ ...label, color: '#B8963A', fontSize: 10 }}>💰 JACKPOT</span>
+          <span style={{ fontSize: 20, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, background: 'linear-gradient(135deg,#FFE9A8,#F5C518)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            ${jackpotAmount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
 
       {/* ── Right: Debug controls + Clock ── */}

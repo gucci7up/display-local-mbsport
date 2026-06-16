@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, Fragment } from 'react';
+import { useEffect, useState, useRef, Fragment, useMemo } from 'react';
 import { Header } from './components/Header';
 import { JackpotAnimation } from './components/JackpotAnimation';
 import { X2Animation } from './components/X2Animation';
@@ -15,6 +15,13 @@ import { socket } from './services/socket';
 type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'VIDEO' | 'RESULTS';
 
 function App() {
+  // Read agencyId from URL: display6 can be launched as ?agencyId=<uuid>
+  // so each agency location shows its own jackpot pool and bonus events.
+  const agencyId = useMemo<string | undefined>(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('agencyId') || undefined;
+  }, []);
+
   const [unlocked, setUnlocked] = useState<boolean>(() => isDisplayUnlocked());
 
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('LOBBY');
@@ -131,8 +138,8 @@ function App() {
     try {
       const [race, history, gameStatus] = await Promise.all([
         api.getCurrentRace(),
-        api.getRaceHistory(8),
-        api.getGameStatus().catch(() => null),
+        api.getRaceHistory(8, agencyId),
+        api.getGameStatus(agencyId).catch(() => null),
       ]);
 
       setCurrentRace(race);

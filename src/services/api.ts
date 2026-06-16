@@ -101,8 +101,10 @@ class ApiService {
     return response.data;
   }
 
-  public async getRaceHistory(limit = 5) {
-    const response = await this.client.get(`/races/history?limit=${limit}`);
+  public async getRaceHistory(limit = 5, agencyId?: string) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (agencyId) params.set('agencyId', agencyId);
+    const response = await this.client.get(`/races/history?${params.toString()}`);
     return response.data;
   }
 
@@ -123,8 +125,9 @@ class ApiService {
     return response.data;
   }
 
-  public async getGameStatus() {
-    const response = await this.client.get('/race-engine/status');
+  public async getGameStatus(agencyId?: string) {
+    const url = agencyId ? `/race-engine/status?agencyId=${agencyId}` : '/race-engine/status';
+    const response = await this.client.get(url);
     return response.data;
   }
 }

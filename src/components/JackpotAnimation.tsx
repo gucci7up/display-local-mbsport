@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface JackpotAnimationProps {
   amount: number;
@@ -22,8 +22,128 @@ const STARS = Array.from({ length: 14 }, (_, i) => ({
   scale: 0.6 + (i % 4) * 0.25,
 }));
 
+function useJackpotAudio() {
+  const ctxRef = useRef<AudioContext | null>(null);
+
+  function getCtx(): AudioContext {
+    if (!ctxRef.current) {
+      ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return ctxRef.current;
+  }
+
+  function coinClink(ctx: AudioContext, master: GainNode, time: number, pitch = 1.0, vol = 0.3) {
+    const harmonics: [number, number][] = [[1, vol], [2.756, vol * 0.55], [5.404, vol * 0.3], [8.9, vol * 0.15]];
+    harmonics.forEach(([h, v]) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g);
+      g.connect(master);
+      osc.type = 'sine';
+      osc.frequency.value = (1000 + Math.random() * 900) * pitch * h;
+      const decay = 0.04 / h + 0.18;
+      g.gain.setValueAtTime(0, time);
+      g.gain.linearRampToValueAtTime(v, time + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + decay);
+      osc.start(time);
+      osc.stop(time + decay + 0.04);
+    });
+  }
+
+  function whoosh(ctx: AudioContext, master: GainNode, time: number) {
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const g = ctx.createGain();
+    filter.type = 'bandpass';
+    filter.Q.value = 0.7;
+    filter.frequency.setValueAtTime(200, time);
+    filter.frequency.exponentialRampToValueAtTime(2200, time + 0.45);
+    osc.connect(filter);
+    filter.connect(g);
+    g.connect(master);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(60, time);
+    osc.frequency.exponentialRampToValueAtTime(900, time + 0.45);
+    g.gain.setValueAtTime(0.55, time);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.5);
+    osc.start(time);
+    osc.stop(time + 0.55);
+  }
+
+  function fanfare(ctx: AudioContext, master: GainNode, startTime: number) {
+    const notes: [number, number, number][] = [
+      [523.25, 0.00, 0.18],
+      [659.25, 0.16, 0.18],
+      [783.99, 0.32, 0.18],
+      [1046.5, 0.48, 0.55],
+      [880.00, 0.88, 0.12],
+      [1046.5, 1.00, 0.90],
+    ];
+    notes.forEach(([freq, delay, dur]) => {
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const g = ctx.createGain();
+      filter.type = 'lowpass';
+      filter.frequency.value = 3500;
+      osc.connect(filter);
+      filter.connect(g);
+      g.connect(master);
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      const t = startTime + delay;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.42, t + 0.02);
+      g.gain.setValueAtTime(0.42, t + dur * 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.start(t);
+      osc.stop(t + dur + 0.05);
+    });
+  }
+
+  function coinRain(ctx: AudioContext, master: GainNode, duration = 10) {
+    const now = ctx.currentTime;
+    for (let i = 0; i < 200; i++) {
+      const t = now + Math.pow(Math.random(), 0.65) * duration;
+      const pitch = 0.55 + Math.random() * 1.1;
+      const vol = 0.10 + Math.random() * 0.28;
+      coinClink(ctx, master, t, pitch, vol);
+    }
+  }
+
+  function playAll() {
+    try {
+      const ctx = getCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      const master = ctx.createGain();
+      master.gain.value = 0.65;
+      master.connect(ctx.destination);
+      const now = ctx.currentTime;
+      whoosh(ctx, master, now);
+      fanfare(ctx, master, now + 0.15);
+      coinRain(ctx, master, 10);
+    } catch (e) {
+      console.warn('JackpotAudio: Web Audio API not available', e);
+    }
+  }
+
+  function stop() {
+    try {
+      ctxRef.current?.close();
+      ctxRef.current = null;
+    } catch (_) {}
+  }
+
+  return { playAll, stop };
+}
+
 export const JackpotAnimation: React.FC<JackpotAnimationProps> = ({ amount, onClose }) => {
   const [countdown, setCountdown] = useState(10);
+  const { playAll, stop } = useJackpotAudio();
+
+  useEffect(() => {
+    playAll();
+    return () => stop();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {

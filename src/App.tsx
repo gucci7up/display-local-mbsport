@@ -99,6 +99,12 @@ function App() {
   const handleVideoEnded = () => {
     setPlayedVideoRaceId(currentRace?.id || null);
     setCurrentScreen('RESULTS');
+    // Immediately try to fetch results — the race should be FINISHED by now
+    if (currentRace?.id) {
+      api.getRaceResults(currentRace.id)
+        .then(results => setResultsData(results))
+        .catch(() => {/* results will arrive in next poll */});
+    }
   };
 
   // 1. Fetch current race and history
@@ -205,11 +211,11 @@ function App() {
         const odds = await api.getLiveOdds(currentRace.id);
         setLiveOdds(odds);
 
-        // Fetch results if finished
-        if (currentRace.status === 'FINISHED') {
+        // Fetch results for any post-race status
+        if (currentRace.status === 'FINISHED' || currentRace.status === 'OFFICIAL') {
           const results = await api.getRaceResults(currentRace.id);
           setResultsData(results);
-        } else {
+        } else if (currentRace.status !== 'RUNNING') {
           setResultsData(null);
         }
       } catch (err) {
@@ -265,15 +271,16 @@ function App() {
     };
   }, [autoMode, currentRace?.id, currentRace?.status, playedVideoRaceId, shownResultsRaceId]);
 
-  // 4. Timer to exit RESULTS screen after 15 seconds in autoMode
+  // 4. Timer to exit RESULTS screen after 35 seconds in autoMode
   useEffect(() => {
     if (!autoMode || !currentRace) return;
-    
-    if (currentScreen === 'RESULTS' && currentRace.status === 'FINISHED' && shownResultsRaceId !== currentRace.id) {
+
+    const isPostRace = currentRace.status === 'FINISHED' || currentRace.status === 'OFFICIAL' || currentRace.status === 'RUNNING';
+    if (currentScreen === 'RESULTS' && isPostRace && shownResultsRaceId !== currentRace.id) {
       const timer = setTimeout(() => {
         setShownResultsRaceId(currentRace.id);
         setCurrentScreen('LOBBY');
-      }, 15000);
+      }, 35000);
       return () => clearTimeout(timer);
     }
   }, [currentScreen, currentRace?.id, currentRace?.status, autoMode, shownResultsRaceId]);
@@ -337,6 +344,7 @@ function App() {
           <OfficialResults
             raceNumber={currentRace?.numero || '---'}
             resultsData={resultsData || (raceHistory.length > 0 ? raceHistory[0] : null)}
+            liveOdds={liveOdds}
           />
         );
         transitionClass = 'animate-fade-out-slide-up-results';

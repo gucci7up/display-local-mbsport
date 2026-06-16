@@ -23,199 +23,202 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
-  const [countdownStr, setCountdownStr] = useState('00:00');
+  const [countdownStr, setCountdownStr] = useState('--:--');
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  const detectFullscreen = () =>
+    !!document.fullscreenElement || window.innerHeight === screen.height;
+
+  const [isFullscreen, setIsFullscreen] = useState(detectFullscreen);
 
   useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onChange = () => setIsFullscreen(detectFullscreen());
     document.addEventListener('fullscreenchange', onChange);
     document.addEventListener('webkitfullscreenchange', onChange);
+    window.addEventListener('resize', onChange);
     return () => {
       document.removeEventListener('fullscreenchange', onChange);
       document.removeEventListener('webkitfullscreenchange', onChange);
+      window.removeEventListener('resize', onChange);
     };
   }, []);
 
   // Real-time clock
   useEffect(() => {
-    const updateTime = () => {
+    const update = () => {
       const now = new Date();
-      setTimeStr(
-        now.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true,
-        })
-      );
-      setDateStr(
-        now.toLocaleDateString('es-DO', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
-      );
+      setTimeStr(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+      setDateStr(now.toLocaleDateString('es-DO', { day: '2-digit', month: '2-digit', year: 'numeric' }));
     };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
   }, []);
 
-  // Countdown timer
+  // Countdown
   useEffect(() => {
     if (!closeAt || status !== 'OPEN') {
-      setCountdownStr('00:00');
+      setCountdownStr('--:--');
       setSecondsRemaining(null);
       return;
     }
-
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const target = new Date(closeAt).getTime();
-      const diff = target - now;
-
-      if (diff <= 0) {
-        setCountdownStr('00:00');
-        setSecondsRemaining(0);
-      } else {
-        const totalSecs = Math.max(0, Math.floor(diff / 1000));
-        setSecondsRemaining(totalSecs);
-        const mins = Math.floor(totalSecs / 60).toString().padStart(2, '0');
-        const secs = (totalSecs % 60).toString().padStart(2, '0');
-        setCountdownStr(`${mins}:${secs}`);
-      }
+    const update = () => {
+      const diff = new Date(closeAt).getTime() - Date.now();
+      if (diff <= 0) { setCountdownStr('00:00'); setSecondsRemaining(0); return; }
+      const s = Math.max(0, Math.floor(diff / 1000));
+      setSecondsRemaining(s);
+      setCountdownStr(`${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`);
     };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
   }, [closeAt, status]);
 
-  const getStatusBadge = (status: string) => {
-    const s = (status || 'OPEN').toUpperCase();
-    switch (s) {
-      case 'OPEN':
-        return (
-          <span className="px-3 py-0.5 rounded bg-green-950/80 border border-green-500 text-green-400 font-display font-black text-xl tracking-wider shadow-[0_0_12px_rgba(34,197,94,0.35)] select-none">
-            ● OPEN
-          </span>
-        );
-      case 'RUNNING':
-        return (
-          <span className="px-3 py-0.5 rounded bg-red-950/80 border border-red-500 text-red-500 font-display font-black text-xl tracking-wider animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)] select-none">
-            ● RUNNING
-          </span>
-        );
-      case 'FINISHED':
-      case 'OFFICIAL':
-        return (
-          <span className="px-3 py-0.5 rounded bg-amber-950/80 border border-pos-yellow text-pos-yellow font-display font-black text-xl tracking-wider shadow-[0_0_12px_rgba(245,197,24,0.35)] select-none">
-            ● FINISHED
-          </span>
-        );
-      case 'CLOSED':
-        return (
-          <span className="px-3 py-0.5 rounded bg-red-950/40 border border-red-900 text-red-700 font-display font-black text-xl tracking-wider select-none">
-            ● CLOSED
-          </span>
-        );
-      default:
-        return (
-          <span className="px-3 py-0.5 rounded bg-zinc-900 border border-zinc-500 text-zinc-300 font-display font-black text-xl tracking-wider select-none">
-            {s}
-          </span>
-        );
-    }
+  const s = (status || 'OPEN').toUpperCase();
+
+  const statusConfig: Record<string, { color: string; glow: string; bg: string; dot: string }> = {
+    OPEN:     { color: '#22c55e', glow: 'rgba(34,197,94,0.4)',   bg: 'rgba(20,83,45,0.5)',   dot: '#22c55e' },
+    RUNNING:  { color: '#ef4444', glow: 'rgba(239,68,68,0.5)',   bg: 'rgba(127,29,29,0.5)',  dot: '#ef4444' },
+    CLOSED:   { color: '#f97316', glow: 'rgba(249,115,22,0.35)', bg: 'rgba(124,45,18,0.4)',  dot: '#f97316' },
+    FINISHED: { color: '#f5c518', glow: 'rgba(245,197,24,0.35)', bg: 'rgba(120,96,0,0.4)',   dot: '#f5c518' },
+    OFFICIAL: { color: '#f5c518', glow: 'rgba(245,197,24,0.35)', bg: 'rgba(120,96,0,0.4)',   dot: '#f5c518' },
+  };
+  const sc = statusConfig[s] || { color: '#9ca3af', glow: 'rgba(156,163,175,0.3)', bg: 'rgba(30,30,30,0.5)', dot: '#9ca3af' };
+
+  const cdColor = secondsRemaining === null ? '#ffffff'
+    : secondsRemaining <= 5  ? '#ef4444'
+    : secondsRemaining <= 10 ? '#f97316'
+    : secondsRemaining <= 30 ? '#f5c518'
+    : '#ffffff';
+
+  const isUrgent = secondsRemaining !== null && secondsRemaining <= 5 && secondsRemaining > 0;
+
+  // Shared chip style
+  const chip = (accentColor: string, extraStyle?: React.CSSProperties): React.CSSProperties => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '6px 20px',
+    borderRadius: 8,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderTop: `2px solid ${accentColor}`,
+    boxShadow: `0 0 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
+    minWidth: 100,
+    height: 58,
+    gap: 3,
+    ...extraStyle,
+  });
+
+  const label: React.CSSProperties = {
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.22em',
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.35)',
+    fontFamily: "'Barlow Condensed', sans-serif",
+    lineHeight: 1,
   };
 
-  const getCountdownClass = () => {
-    if (status !== 'OPEN' || secondsRemaining === null) return 'text-white';
-    if (secondsRemaining <= 5 && secondsRemaining > 0) {
-      return 'text-pos-red font-display font-black animate-countdown-urgent inline-block';
-    }
-    if (secondsRemaining <= 10) {
-      return 'text-orange-500 font-bold';
-    }
-    if (secondsRemaining <= 30) {
-      return 'text-yellow-500 font-bold';
-    }
-    return 'text-white';
-  };
-
-  const headerClass = isTransparent
-    ? "relative flex items-center justify-between px-6 py-3 bg-gradient-to-b from-black/85 via-black/45 to-transparent select-none z-10 shrink-0 border-b-0 shadow-none"
-    : "relative flex items-center justify-between px-6 py-3 bg-gradient-to-b from-surface-2/80 via-pos-bg to-black select-none z-10 shrink-0 shadow-card";
-
-  const chipClass = "flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] text-center backdrop-blur-sm";
+  const headerBg = isTransparent
+    ? 'linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)'
+    : 'linear-gradient(180deg, #111114 0%, #0a0a0c 100%)';
 
   return (
-    <header className={headerClass}>
-      {/* Left Section: Logo & Status info */}
-      <div className="flex items-center gap-7">
-        {/* Brand Logo */}
-        <div className="flex flex-col items-center">
-          <img src="/logo.png" alt="MBSport Logo" className="h-14 object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]" />
-          <span className="text-[9px] font-bold text-gray-500 tracking-[0.35em] uppercase -mt-2">
+    <header
+      className="relative flex items-center justify-between select-none z-10 shrink-0"
+      style={{
+        padding: '0 24px',
+        height: 72,
+        background: headerBg,
+        borderBottom: isTransparent ? 'none' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: isTransparent ? 'none' : '0 4px 32px rgba(0,0,0,0.6)',
+      }}
+    >
+      {/* ── Left: Logo + chips ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <img src="/logo.png" alt="MBSport" style={{ height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))' }} />
+          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
             Racing Dogs
           </span>
         </div>
 
-        {/* Vertical Divider */}
-        <div className="h-10 w-[1px] bg-gradient-to-b from-transparent via-pos-border to-transparent" />
+        {/* Divider */}
+        <div style={{ width: 1, height: 40, background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent)' }} />
 
-        {/* Panels Container */}
-        <div className="flex items-center gap-3">
-          {/* Carrera Info */}
-          <div className={`${chipClass} px-4 py-1 min-w-[95px] h-[52px]`}>
-            <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1">CARRERA</span>
-            <span className="text-3xl font-extrabold font-display leading-none text-gradient-gold drop-shadow-[0_0_10px_rgba(245,197,24,0.25)]">
-              {raceNumber || '---'}
+        {/* CARRERA */}
+        <div style={chip('#f5c518')}>
+          <span style={label}>Carrera</span>
+          <span style={{ fontSize: 32, fontWeight: 900, lineHeight: 1, fontFamily: "'Barlow Condensed', sans-serif", background: 'linear-gradient(135deg,#FFE9A8,#F5C518)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            {raceNumber || '---'}
+          </span>
+        </div>
+
+        {/* ESTADO */}
+        <div style={{ ...chip(sc.color), minWidth: 140, background: sc.bg, borderColor: `${sc.color}40`, borderTop: `2px solid ${sc.color}`, boxShadow: `0 0 20px ${sc.glow}, inset 0 1px 0 rgba(255,255,255,0.04)` }}>
+          <span style={label}>Estado</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: sc.dot, boxShadow: `0 0 8px ${sc.dot}`, flexShrink: 0, animation: s === 'RUNNING' ? 'pulse 1s infinite' : undefined }} />
+            <span style={{ fontSize: 22, fontWeight: 900, color: sc.color, letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", lineHeight: 1 }}>
+              {s}
             </span>
           </div>
+        </div>
 
-          {/* Estado Info */}
-          <div className={`${chipClass} px-4 py-1 min-w-[135px] h-[52px]`}>
-            <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1.5">ESTADO</span>
-            {getStatusBadge(status)}
-          </div>
-
-          {/* Countdown Info */}
-          <div className={`${chipClass} px-5 py-1 min-w-[160px] h-[52px]`}>
-            <span className="text-[10px] font-black text-gray-500 tracking-wider font-display uppercase leading-none mb-1.5">
-              PRÓXIMA CARRERA EN
-            </span>
-            <div className="h-6 flex items-center justify-center">
-              <span className={`text-2xl font-black font-mono leading-none tracking-widest ${getCountdownClass()}`}>
-                {countdownStr}
-              </span>
-            </div>
-          </div>
+        {/* CIERRE EN */}
+        <div style={{ ...chip(cdColor), minWidth: 150, borderTop: `2px solid ${cdColor}`, transition: 'border-color 0.5s' }}>
+          <span style={label}>Cierre en</span>
+          <span
+            style={{
+              fontSize: 30,
+              fontWeight: 900,
+              fontFamily: 'monospace',
+              letterSpacing: '0.12em',
+              lineHeight: 1,
+              color: cdColor,
+              textShadow: isUrgent ? `0 0 20px ${cdColor}` : undefined,
+              animation: isUrgent ? 'pulse 0.6s infinite' : undefined,
+            }}
+          >
+            {countdownStr}
+          </span>
         </div>
       </div>
 
-      {/* Right Section: Time, Date & Auto TV Toggle */}
-      <div className="flex items-center gap-6">
-        {/* Debug controls — ocultar en fullscreen */}
+      {/* ── Right: Debug controls + Clock ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Debug controls — hidden in fullscreen */}
         {debugMode && !isFullscreen && (
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={toggleAutoMode}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold transition-all duration-300 ${
-                autoMode
-                  ? 'bg-pos-green/20 border-pos-green-light text-pos-green-light shadow-[0_0_12px_rgba(34,197,94,0.45)]'
-                  : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white'
-              }`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '7px 16px', borderRadius: 999,
+                border: autoMode ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.12)',
+                background: autoMode ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.03)',
+                color: autoMode ? '#22c55e' : '#6b7280',
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer',
+                boxShadow: autoMode ? '0 0 12px rgba(34,197,94,0.3)' : 'none',
+                transition: 'all 0.3s',
+              }}
             >
-              <span className={`w-2.5 h-2.5 rounded-full ${autoMode ? 'bg-pos-green-light animate-pulse shadow-[0_0_8px_#22c55e]' : 'bg-gray-500'}`} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: autoMode ? '#22c55e' : '#4b5563', boxShadow: autoMode ? '0 0 6px #22c55e' : 'none' }} />
               {autoMode ? 'MODO TV: AUTO' : 'MODO TV: MANUAL'}
             </button>
             {onLock && (
               <button
                 onClick={onLock}
-                className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.03] text-gray-400 hover:text-white hover:border-red-500/50 text-xs font-bold transition-all duration-300"
-                title="Bloquear display"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 16px', borderRadius: 999,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: '#6b7280', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.3s',
+                }}
               >
                 🔒 LOCK
               </button>
@@ -224,21 +227,18 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Clock */}
-        <div className={`${chipClass} items-end px-4 py-1.5 min-w-[130px] h-[52px] justify-center`}>
-          <span className="text-xl font-bold font-mono text-white tracking-wide leading-none">
+        <div style={chip('rgba(255,255,255,0.15)', { minWidth: 140 })}>
+          <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'monospace', color: '#ffffff', lineHeight: 1, letterSpacing: '0.05em' }}>
             {timeStr}
           </span>
-          <span className="text-[10px] font-bold text-gray-500 font-mono mt-1 uppercase leading-none">
-            {dateStr}
-          </span>
+          <span style={{ ...label, marginTop: 2, color: 'rgba(255,255,255,0.3)' }}>{dateStr}</span>
         </div>
       </div>
 
       {/* Bottom gold accent line */}
       {!isTransparent && (
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gold-line" />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,197,24,0.5), transparent)' }} />
       )}
     </header>
   );
 };
-

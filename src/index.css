@@ -503,3 +503,344 @@
   to   { box-shadow: 0 0 28px rgba(245,197,24,0.35), inset 0 1px 0 rgba(255,255,255,0.04); }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   X2 ANIMATION — multiplicador eléctrico naranja
+   ═══════════════════════════════════════════════════════════ */
+
+.x2-overlay {
+  animation: x2-overlay-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes x2-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.x2-backdrop {
+  background: radial-gradient(ellipse at center, rgba(80,30,0,0.96) 0%, rgba(10,5,0,0.98) 70%);
+}
+
+.x2-bg-glow {
+  background: radial-gradient(ellipse 80% 60% at 50% 50%,
+    rgba(255,120,0,0.18) 0%,
+    transparent 70%
+  );
+  animation: x2-bg-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes x2-bg-pulse {
+  from { opacity: 0.7; transform: scale(0.95); }
+  to   { opacity: 1.0; transform: scale(1.05); }
+}
+
+/* Lightning bolts floating in background */
+.x2-bolt {
+  color: #ff8800;
+  animation: x2-bolt-flicker 0.4s ease-in-out infinite alternate;
+  will-change: opacity, transform;
+  opacity: 0.35;
+  text-shadow: 0 0 12px rgba(255,140,0,0.7);
+}
+
+@keyframes x2-bolt-flicker {
+  0%   { opacity: 0.15; transform: scale(0.9) rotate(-5deg); }
+  40%  { opacity: 0.55; transform: scale(1.1) rotate(3deg); }
+  70%  { opacity: 0.25; transform: scale(0.95) rotate(-2deg); }
+  100% { opacity: 0.50; transform: scale(1.05) rotate(5deg); }
+}
+
+/* Main card */
+.x2-card {
+  animation: x2-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(50,20,0,0.78) 0%, rgba(10,5,0,0.70) 100%);
+  border: 1px solid rgba(255,140,0,0.35);
+  box-shadow:
+    0 0 60px rgba(255,120,0,0.25),
+    0 0 160px rgba(255,80,0,0.12),
+    inset 0 1px 0 rgba(255,180,50,0.08);
+  backdrop-filter: blur(18px);
+}
+
+@keyframes x2-card-in {
+  0%   { opacity: 0; transform: scale(0.4) translateY(60px); }
+  100% { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+/* "MULTIPLICADOR ACTIVADO" top label */
+.x2-top-label {
+  font-size: clamp(0.7rem, 1.2vw, 1.0rem);
+  color: rgba(255,180,80,0.7);
+  letter-spacing: 0.45em;
+}
+
+/* ⚡ X2 ⚡ mega title */
+.x2-title {
+  font-size: clamp(5rem, 14vw, 12rem);
+  line-height: 1;
+  background: linear-gradient(135deg, #FFF0D0 0%, #FF9900 35%, #FF6600 65%, #FFD080 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter:
+    drop-shadow(0 0 50px rgba(255, 140, 0, 1.0))
+    drop-shadow(0 0 100px rgba(255, 80, 0, 0.65))
+    drop-shadow(0 4px 0 rgba(80, 30, 0, 0.9));
+  animation: x2-title-pulse 0.9s ease-in-out infinite alternate;
+  letter-spacing: 0.06em;
+}
+
+@keyframes x2-title-pulse {
+  from {
+    filter:
+      drop-shadow(0 0 40px rgba(255,140,0,0.85))
+      drop-shadow(0 0 80px rgba(255,80,0,0.5))
+      drop-shadow(0 4px 0 rgba(80,30,0,0.9));
+    transform: scale(1);
+  }
+  to {
+    filter:
+      drop-shadow(0 0 70px rgba(255,160,0,1.0))
+      drop-shadow(0 0 140px rgba(255,100,0,0.8))
+      drop-shadow(0 4px 0 rgba(80,30,0,0.9));
+    transform: scale(1.03);
+  }
+}
+
+/* Dog badge circle */
+.x2-dog-badge {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.2rem;
+  line-height: 1;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 0 30px rgba(255,140,0,0.6), 0 0 60px rgba(255,100,0,0.3);
+  animation: x2-badge-pop 0.5s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes x2-badge-pop {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-20deg); }
+  100% { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+
+/* Dog name */
+.x2-dog-name {
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  text-shadow: 0 0 20px currentColor;
+  animation: x2-name-in 0.4s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Dog badge + name section entrance */
+.x2-dog-enter {
+  animation: x2-dog-enter 0.5s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes x2-dog-enter {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes x2-name-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Subtitle */
+.x2-subtitle {
+  font-size: clamp(0.9rem, 1.5vw, 1.3rem);
+  color: rgba(255,180,80,0.75);
+  letter-spacing: 0.2em;
+  animation: x2-subtitle-in 0.4s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes x2-subtitle-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hint */
+.x2-hint {
+  color: rgba(255,140,0,0.4);
+  animation: x2-hint-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes x2-hint-blink {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BONUS ANIMATION — trifecta verde/dorado
+   ═══════════════════════════════════════════════════════════ */
+
+.bonus-overlay {
+  animation: bonus-overlay-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes bonus-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.bonus-backdrop {
+  background: radial-gradient(ellipse at center, rgba(0,50,20,0.96) 0%, rgba(0,10,5,0.98) 70%);
+}
+
+.bonus-bg-glow {
+  background: radial-gradient(ellipse 80% 60% at 50% 50%,
+    rgba(0,200,80,0.15) 0%,
+    transparent 70%
+  );
+  animation: bonus-bg-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes bonus-bg-pulse {
+  from { opacity: 0.6; transform: scale(0.96); }
+  to   { opacity: 1.0; transform: scale(1.04); }
+}
+
+/* Floating ✦ stars */
+.bonus-star {
+  color: #00e87a;
+  animation: bonus-star-twinkle 1.5s ease-in-out infinite alternate;
+  will-change: opacity, transform;
+  opacity: 0.3;
+  text-shadow: 0 0 10px rgba(0,220,100,0.6);
+}
+
+@keyframes bonus-star-twinkle {
+  from { opacity: 0.12; transform: scale(0.7) rotate(0deg); }
+  to   { opacity: 0.75; transform: scale(1.25) rotate(30deg); }
+}
+
+/* Floating 💎 diamonds */
+.bonus-diamond {
+  animation: bonus-diamond-float 2.0s ease-in-out infinite alternate;
+  opacity: 0.45;
+}
+
+@keyframes bonus-diamond-float {
+  from { transform: translateY(0px) scale(0.9); opacity: 0.3; }
+  to   { transform: translateY(-14px) scale(1.1); opacity: 0.65; }
+}
+
+/* Main card */
+.bonus-card {
+  animation: bonus-card-in 0.60s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(0,35,15,0.80) 0%, rgba(0,10,5,0.70) 100%);
+  border: 1px solid rgba(0,200,80,0.30);
+  box-shadow:
+    0 0 70px rgba(0,200,80,0.20),
+    0 0 180px rgba(0,160,60,0.10),
+    inset 0 1px 0 rgba(100,255,150,0.06);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes bonus-card-in {
+  0%   { opacity: 0; transform: scale(0.35) translateY(80px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* Trophy */
+.bonus-trophy {
+  animation:
+    bonus-trophy-bounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    bonus-trophy-float  2.8s ease-in-out 0.65s infinite alternate;
+}
+
+@keyframes bonus-trophy-bounce {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-15deg); }
+  100% { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+
+@keyframes bonus-trophy-float {
+  from { transform: translateY(0px)  rotate(-3deg); }
+  to   { transform: translateY(-10px) rotate(3deg); }
+}
+
+/* TRIFECTA BONUS title */
+.bonus-title {
+  font-size: clamp(3.5rem, 9vw, 8rem);
+  line-height: 1.05;
+  background: linear-gradient(135deg, #D0FFE8 0%, #00E87A 35%, #00A850 65%, #D0FFE8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter:
+    drop-shadow(0 0 40px rgba(0, 220, 100, 0.90))
+    drop-shadow(0 0 80px rgba(0, 160, 60, 0.55))
+    drop-shadow(0 4px 0 rgba(0, 40, 15, 0.9));
+  animation: bonus-title-pulse 1.2s ease-in-out infinite alternate;
+  letter-spacing: 0.04em;
+}
+
+@keyframes bonus-title-pulse {
+  from {
+    filter:
+      drop-shadow(0 0 35px rgba(0,220,100,0.80))
+      drop-shadow(0 0 70px rgba(0,160,60,0.45))
+      drop-shadow(0 4px 0 rgba(0,40,15,0.9));
+    transform: scale(1);
+  }
+  to {
+    filter:
+      drop-shadow(0 0 55px rgba(0,240,110,1.0))
+      drop-shadow(0 0 110px rgba(0,180,70,0.75))
+      drop-shadow(0 4px 0 rgba(0,40,15,0.9));
+    transform: scale(1.02);
+  }
+}
+
+/* Divider */
+.bonus-divider {
+  width: 75%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,220,100,0.75), transparent);
+  border-radius: 1px;
+}
+
+/* Bonus amount label (e.g. "+20%") */
+.bonus-amount {
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  background: linear-gradient(135deg, #ffffff 0%, #D0FFE8 40%, #F5C518 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 30px rgba(0, 220, 100, 0.75));
+  animation: bonus-amount-in 0.5s 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bonus-amount-in {
+  from { opacity: 0; transform: scale(0.65); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Subtitle */
+.bonus-subtitle {
+  font-size: clamp(0.85rem, 1.4vw, 1.2rem);
+  color: rgba(150,255,190,0.70);
+  letter-spacing: 0.22em;
+  animation: bonus-subtitle-in 0.4s 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bonus-subtitle-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hint */
+.bonus-hint {
+  color: rgba(0,200,80,0.40);
+  animation: bonus-hint-blink 1.9s ease-in-out infinite;
+}
+
+@keyframes bonus-hint-blink {
+  0%, 100% { opacity: 0.40; }
+  50%       { opacity: 0.85; }
+}
+

@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, Fragment } from 'react';
 import { Header } from './components/Header';
 import { JackpotAnimation } from './components/JackpotAnimation';
+import { X2Animation } from './components/X2Animation';
+import { BonusAnimation } from './components/BonusAnimation';
 import { Lobby } from './pages/Lobby';
 import { DogsPresentation } from './pages/DogsPresentation';
 import { ExactaMatrix } from './pages/ExactaMatrix';
@@ -93,6 +95,16 @@ function App() {
   const [showJackpotWin, setShowJackpotWin] = useState<boolean>(false);
   const [jackpotWinAmount, setJackpotWinAmount] = useState<number>(0);
   const jackpotWonRaceIdRef = useRef<string | null>(null);
+
+  // X2 state
+  const [showX2, setShowX2] = useState<boolean>(false);
+  const [x2DogNum, setX2DogNum] = useState<number>(0);
+  const x2ShownRaceIdRef = useRef<string | null>(null);
+
+  // Bonus state
+  const [showBonus, setShowBonus] = useState<boolean>(false);
+  const [bonusLabelState, setBonusLabelState] = useState<string>('');
+  const bonusShownRaceIdRef = useRef<string | null>(null);
 
   // Rotation cycle state (only used in OPEN status)
   const openScreens: ScreenType[] = ['LOBBY', 'DOGS', 'ODDS'];
@@ -204,6 +216,29 @@ function App() {
       jackpotWonRaceIdRef.current = latest.id;
       setJackpotWinAmount(won);
       setShowJackpotWin(true);
+    }
+  }, [raceHistory]);
+
+  // Detect X2 multiplier activation
+  useEffect(() => {
+    if (!currentRace) return;
+    const dog = Number(currentRace.x2Dog ?? 0);
+    if (dog > 0 && currentRace.id !== x2ShownRaceIdRef.current) {
+      x2ShownRaceIdRef.current = currentRace.id;
+      setX2DogNum(dog);
+      setShowX2(true);
+    }
+  }, [currentRace?.x2Dog, currentRace?.id]);
+
+  // Detect trifecta bonus from race history
+  useEffect(() => {
+    if (raceHistory.length === 0) return;
+    const latest = raceHistory[0];
+    const bonus = latest.bonusLabel ?? '';
+    if (bonus && latest.id !== bonusShownRaceIdRef.current) {
+      bonusShownRaceIdRef.current = latest.id;
+      setBonusLabelState(bonus);
+      setShowBonus(true);
     }
   }, [raceHistory]);
 
@@ -448,6 +483,22 @@ function App() {
         <JackpotAnimation
           amount={jackpotWinAmount}
           onClose={() => setShowJackpotWin(false)}
+        />
+      )}
+
+      {/* X2 MULTIPLIER ANIMATION OVERLAY */}
+      {showX2 && (
+        <X2Animation
+          dog={x2DogNum}
+          onClose={() => setShowX2(false)}
+        />
+      )}
+
+      {/* TRIFECTA BONUS ANIMATION OVERLAY */}
+      {showBonus && (
+        <BonusAnimation
+          bonusLabel={bonusLabelState}
+          onClose={() => setShowBonus(false)}
         />
       )}
     </div>

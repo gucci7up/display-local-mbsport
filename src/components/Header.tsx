@@ -25,6 +25,17 @@ export const Header: React.FC<HeaderProps> = ({
   const [dateStr, setDateStr] = useState('');
   const [countdownStr, setCountdownStr] = useState('00:00');
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    document.addEventListener('webkitfullscreenchange', onChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      document.removeEventListener('webkitfullscreenchange', onChange);
+    };
+  }, []);
 
   // Real-time clock
   useEffect(() => {
@@ -186,8 +197,8 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Section: Time, Date & Auto TV Toggle */}
       <div className="flex items-center gap-6">
-        {/* Debug controls */}
-        {debugMode && (
+        {/* Debug controls — ocultar en fullscreen */}
+        {debugMode && !isFullscreen && (
           <div className="flex items-center gap-2">
             <button
               onClick={toggleAutoMode}

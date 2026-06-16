@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, Fragment } from 'react';
 import { Header } from './components/Header';
+import { JackpotAnimation } from './components/JackpotAnimation';
 import { Lobby } from './pages/Lobby';
 import { DogsPresentation } from './pages/DogsPresentation';
 import { ExactaMatrix } from './pages/ExactaMatrix';
@@ -87,6 +88,12 @@ function App() {
   const preloadingRef = useRef<boolean>(false);
   const preloadBlobRef = useRef<string | null>(null);
 
+  // Jackpot state
+  const [jackpotAmount, setJackpotAmount] = useState<number>(0);
+  const [showJackpotWin, setShowJackpotWin] = useState<boolean>(false);
+  const [jackpotWinAmount, setJackpotWinAmount] = useState<number>(0);
+  const jackpotWonRaceIdRef = useRef<string | null>(null);
+
   // Rotation cycle state (only used in OPEN status)
   const openScreens: ScreenType[] = ['LOBBY', 'DOGS', 'ODDS'];
   const openScreenIndexRef = useRef<number>(0);
@@ -107,15 +114,21 @@ function App() {
     }
   };
 
-  // 1. Fetch current race and history
+  // 1. Fetch current race, history and game status
   const fetchData = async () => {
     try {
-      const race = await api.getCurrentRace();
-      setCurrentRace(race);
+      const [race, history, gameStatus] = await Promise.all([
+        api.getCurrentRace(),
+        api.getRaceHistory(8),
+        api.getGameStatus().catch(() => null),
+      ]);
 
-      // Fetch history for results panel
-      const history = await api.getRaceHistory(8);
+      setCurrentRace(race);
       setRaceHistory(history);
+
+      if (gameStatus) {
+        setJackpotAmount(Number(gameStatus.jackpotAmount ?? 0));
+      }
 
       setError(null);
     } catch (err: any) {
@@ -181,6 +194,18 @@ function App() {
       }
     };
   }, [currentRace?.id]);
+
+  // Detect jackpot win from race history
+  useEffect(() => {
+    if (raceHistory.length === 0) return;
+    const latest = raceHistory[0];
+    const won = Number(latest.jackpotWon ?? 0);
+    if (won > 0 && latest.id !== jackpotWonRaceIdRef.current) {
+      jackpotWonRaceIdRef.current = latest.id;
+      setJackpotWinAmount(won);
+      setShowJackpotWin(true);
+    }
+  }, [raceHistory]);
 
   // 2. Fetch odds and results when current race changes
   useEffect(() => {
@@ -372,6 +397,7 @@ function App() {
             onLock={handleLock}
             debugMode={debugMode}
             isTransparent={currentScreen === 'VIDEO'}
+            jackpotAmount={jackpotAmount}
           />
         </div>
 
@@ -415,9 +441,15 @@ function App() {
             </div>
           </div>
         </div>
-
-
       </div>
+
+      {/* JACKPOT WIN ANIMATION OVERLAY */}
+      {showJackpotWin && (
+        <JackpotAnimation
+          amount={jackpotWinAmount}
+          onClose={() => setShowJackpotWin(false)}
+        />
+      )}
     </div>
   );
 }

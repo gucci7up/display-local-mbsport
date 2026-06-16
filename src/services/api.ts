@@ -122,6 +122,11 @@ class ApiService {
     });
     return response.data;
   }
+
+  public async getGameStatus() {
+    const response = await this.client.get('/race-engine/status');
+    return response.data;
+  }
 }
 
 export const api = new ApiService();

@@ -315,4 +315,191 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   JACKPOT WIN ANIMATION
+───────────────────────────────────────────────────────────── */
+
+.jackpot-overlay {
+  animation: jackpot-overlay-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes jackpot-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.jackpot-backdrop {
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.92) 100%);
+}
+
+.jackpot-bg-glow {
+  background: radial-gradient(ellipse 70% 55% at 50% 48%,
+    rgba(245, 197, 24, 0.28) 0%,
+    rgba(200, 140, 0, 0.14) 40%,
+    transparent 70%
+  );
+  animation: jackpot-glow-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes jackpot-glow-pulse {
+  from { opacity: 0.55; transform: scale(0.93); }
+  to   { opacity: 1;    transform: scale(1.07); }
+}
+
+/* Falling coin particles */
+.jackpot-coin {
+  animation: jackpot-coin-fall linear infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes jackpot-coin-fall {
+  0% {
+    transform: translateY(-40px) translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  80% { opacity: 0.85; }
+  100% {
+    transform: translateY(105vh) translateX(var(--swing, 0px)) rotate(900deg);
+    opacity: 0;
+  }
+}
+
+/* Background sparkle twinkle */
+.jackpot-star {
+  animation: jackpot-star-twinkle 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes jackpot-star-twinkle {
+  from { opacity: 0.15; transform: scale(0.8) rotate(0deg); }
+  to   { opacity: 0.9;  transform: scale(1.3) rotate(30deg); }
+}
+
+/* Main card entrance */
+.jackpot-card {
+  animation: jackpot-card-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 24px;
+  background: linear-gradient(165deg, rgba(30,25,5,0.75) 0%, rgba(10,8,2,0.65) 100%);
+  border: 1px solid rgba(245, 197, 24, 0.30);
+  box-shadow:
+    0 0 80px rgba(245, 197, 24, 0.22),
+    0 0 200px rgba(245, 197, 24, 0.10),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes jackpot-card-in {
+  0%   { opacity: 0; transform: scale(0.35) translateY(80px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* Trophy bounce */
+.jackpot-trophy {
+  animation: jackpot-trophy-bounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both, jackpot-trophy-float 2.5s ease-in-out 0.7s infinite alternate;
+}
+
+@keyframes jackpot-trophy-bounce {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-15deg); }
+  100% { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+
+@keyframes jackpot-trophy-float {
+  from { transform: translateY(0px)   rotate(-3deg); }
+  to   { transform: translateY(-10px) rotate(3deg); }
+}
+
+/* JACKPOT large gradient text */
+.jackpot-title {
+  font-size: clamp(5rem, 13vw, 11rem);
+  line-height: 1;
+  background: linear-gradient(135deg, #FFF3C4 0%, #F5C518 35%, #D4920A 65%, #FFF3C4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter:
+    drop-shadow(0 0 45px rgba(245, 197, 24, 0.95))
+    drop-shadow(0 0 90px rgba(245, 197, 24, 0.55))
+    drop-shadow(0 4px 0 rgba(100, 60, 0, 0.8));
+  animation: jackpot-title-pulse 1.1s ease-in-out infinite alternate;
+  letter-spacing: 0.04em;
+}
+
+@keyframes jackpot-title-pulse {
+  from {
+    filter:
+      drop-shadow(0 0 40px rgba(245, 197, 24, 0.85))
+      drop-shadow(0 0 80px rgba(245, 197, 24, 0.45))
+      drop-shadow(0 4px 0 rgba(100, 60, 0, 0.8));
+    transform: scale(1);
+  }
+  to {
+    filter:
+      drop-shadow(0 0 65px rgba(245, 197, 24, 1.0))
+      drop-shadow(0 0 130px rgba(245, 197, 24, 0.75))
+      drop-shadow(0 4px 0 rgba(100, 60, 0, 0.8));
+    transform: scale(1.025);
+  }
+}
+
+/* Gold divider */
+.jackpot-divider {
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245,197,24,0.8), transparent);
+  border-radius: 1px;
+}
+
+/* INSTANT WIN subtitle */
+.jackpot-subtitle {
+  font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+  color: #FFE9A8;
+  text-shadow:
+    0 0 18px rgba(245, 197, 24, 0.7),
+    0 2px 4px rgba(0,0,0,0.8);
+  animation: jackpot-subtitle-in 0.5s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  letter-spacing: 0.45em;
+}
+
+@keyframes jackpot-subtitle-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Prize amount */
+.jackpot-amount {
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  background: linear-gradient(135deg, #ffffff 0%, #FFE9A8 50%, #F5C518 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 25px rgba(245, 197, 24, 0.8));
+  animation: jackpot-amount-in 0.5s 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes jackpot-amount-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Dismiss hint */
+.jackpot-hint {
+  color: rgba(245, 197, 24, 0.45);
+  animation: jackpot-hint-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes jackpot-hint-blink {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.85; }
+}
+
+/* Jackpot counter chip in header */
+.jackpot-counter-chip {
+  border: 1px solid rgba(245, 197, 24, 0.45);
+  box-shadow: 0 0 18px rgba(245, 197, 24, 0.20), inset 0 1px 0 rgba(255,255,255,0.04);
+  animation: jackpot-counter-glow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes jackpot-counter-glow {
+  from { box-shadow: 0 0 10px rgba(245,197,24,0.15), inset 0 1px 0 rgba(255,255,255,0.04); }
+  to   { box-shadow: 0 0 28px rgba(245,197,24,0.35), inset 0 1px 0 rgba(255,255,255,0.04); }
+}
 

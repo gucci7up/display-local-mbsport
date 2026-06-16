@@ -4,11 +4,15 @@ import { api } from '../services/api';
 interface VideoRaceProps {
   currentRace: any;
   onVideoEnded: () => void;
+  preloadedSrc?: string | null;
+  isPreloading?: boolean;
 }
 
-export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded }) => {
-  const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded, preloadedSrc, isPreloading }) => {
+  // If preloadedSrc is already available, start ready — no loading needed
+  const [videoSrc, setVideoSrc] = useState<string | null>(preloadedSrc ?? null);
+  // isLoading = true only when we need to download ourselves (not preloaded, not preloading)
+  const [isLoading, setIsLoading] = useState<boolean>(!preloadedSrc && !isPreloading);
   const [downloadFailed, setDownloadFailed] = useState<boolean>(false);
   const [showStartingBanner, setShowStartingBanner] = useState<boolean>(true);
   
@@ -23,84 +27,75 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
   // Determine current progress (for fallback progress bar)
   const progress = downloadFailed ? (duration - fallbackCountdown) / duration : currentTime / duration;
 
-  // 1. Download Video Blob using auth header
+  // 1. Use preloaded blob if available; wait for it if preloading; download only as last resort
   useEffect(() => {
     let active = true;
     let localBlobUrl: string | null = null;
+
+    const videoDuration = currentRace?.video?.durationSeconds || 42;
+    setDuration(videoDuration);
+    setFallbackCountdown(videoDuration);
+    setCurrentTime(0);
+    setDownloadFailed(false);
+    setShowStartingBanner(true);
+
+    const playReady = (src: string) => {
+      setVideoSrc(src);
+      setIsLoading(false);
+      // Keep banner 2s then play
+      setTimeout(() => {
+        if (!active) return;
+        setShowStartingBanner(false);
+        videoRef.current?.play().catch(err => console.error('Autoplay failed:', err));
+      }, 2000);
+    };
+
+    // ── Fast path: preload ya terminó ──
+    if (preloadedSrc) {
+      console.log(`[VideoRace] Video precargado listo #${currentRace?.numero}`);
+      playReady(preloadedSrc);
+      return () => { active = false; };
+    }
+
+    // ── Waiting path: App todavía está descargando en background ──
+    // Mostramos STARTING RACE banner y esperamos a que preloadedSrc llegue via prop.
+    // El efecto se re-ejecuta cuando preloadedSrc cambia de null → url.
+    if (isPreloading) {
+      console.log(`[VideoRace] Esperando preload en background #${currentRace?.numero}...`);
+      setIsLoading(false); // No mostrar pantalla de carga — solo el banner
+      return () => { active = false; };
+    }
+
+    // ── Slow path: ni preloaded ni preloading — descargar ahora ──
+    setIsLoading(true);
 
     const loadVideo = async () => {
       if (!currentRace?.video) {
         setIsLoading(false);
         setDownloadFailed(true);
+        setTimeout(() => { if (active) setShowStartingBanner(false); }, 2000);
         return;
       }
-
-      setIsLoading(true);
-      setDownloadFailed(false);
-      setShowStartingBanner(true);
-      setCurrentTime(0);
-      
-      const videoDuration = currentRace.video.durationSeconds || 42;
-      setDuration(videoDuration);
-      setFallbackCountdown(videoDuration);
-
-      // Extract filename from archivo path (e.g. "/opt/mbraces/videos/111.webm" -> "111.webm")
-      const archivoPath = currentRace.video.archivo || '';
-      const filename = archivoPath.split('/').pop() || `${currentRace.video.nombre}.webm`;
-
-      // Log exact debugging info as requested by the user
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.mbsport.lat';
-      const absoluteVideoUrl = `${baseUrl.replace(/\/+$/, '')}/videos/${filename}`;
-      console.log(`Race Number: ${currentRace.numero}`);
-      console.log(`Video Number: ${currentRace.video?.nombre || '---'}`);
-      console.log(`Video URL: ${absoluteVideoUrl}`);
-
+      const filename = (currentRace.video.archivo || '').split('/').pop()
+        || `${currentRace.video.nombre}.webm`;
+      console.log(`[VideoRace] Descarga directa #${currentRace.numero}: ${filename}`);
       try {
         const blob = await api.getVideoBlob(filename);
-        
         if (!active) return;
-        
         localBlobUrl = URL.createObjectURL(blob);
-        setVideoSrc(localBlobUrl);
-        setIsLoading(false);
-        
-        // Starting Banner timeout of 2 seconds
-        setTimeout(() => {
-          if (active) {
-            setShowStartingBanner(false);
-            if (videoRef.current) {
-              videoRef.current.play().catch((err) => {
-                console.error("Autoplay failed:", err);
-              });
-            }
-          }
-        }, 2000);
-
+        playReady(localBlobUrl);
       } catch (err) {
-        console.error("Failed to fetch video blob from API:", err);
+        console.error('[VideoRace] Error:', err);
         if (!active) return;
-        
         setIsLoading(false);
         setDownloadFailed(true);
-        
-        // Show starting banner for 2 seconds even in fallback
-        setTimeout(() => {
-          if (active) {
-            setShowStartingBanner(false);
-          }
-        }, 2000);
+        setTimeout(() => { if (active) setShowStartingBanner(false); }, 2000);
       }
     };
 
     loadVideo();
-
-    return () => {
-      active = false;
-      if (localBlobUrl) {
-        URL.revokeObjectURL(localBlobUrl);
-      }
-    };
-  }, [currentRace?.id]);
+    return () => { active = false; if (localBlobUrl) URL.revokeObjectURL(localBlobUrl); };
+  }, [currentRace?.id, preloadedSrc, isPreloading]);
 
   // 2. Handle Fallback Countdown Timer when download fails
   useEffect(() => {

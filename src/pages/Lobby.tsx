@@ -101,70 +101,42 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
   return (
     <div className="flex-1 flex gap-6 p-6 overflow-hidden bg-black/40 select-none relative z-10">
       {/* Left Column: Últimos Resultados */}
-      <div className="w-[380px] flex flex-col rounded-2xl p-4 shrink-0 glass-panel">
+      <div className="w-[480px] flex flex-col rounded-2xl p-4 shrink-0 glass-panel">
         <h2 className="text-gradient-gold font-display font-extrabold text-xl tracking-wider mb-3 uppercase">
           Últimos Resultados
         </h2>
         <div className="gold-divider mb-4" />
 
         {/* Results List */}
-        <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto">
+        <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
           {raceHistory.length === 0 ? (
-            // Mock Fallbacks matching ref-1.png if history is empty
+            // Mock Fallbacks
             <>
-              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                <span className="text-gray-400 font-mono text-base font-bold">#396</span>
-                <span className="flex gap-2">
-                  <span className="bg-pos-blue w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">2</span>
-                  <span className="bg-pos-gray border border-pos-border w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">4</span>
-                  <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black">6</span>
-                </span>
-                <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:28 PM</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                <span className="text-gray-400 font-mono text-base font-bold">#395</span>
-                <span className="flex gap-2">
-                  <span className="bg-pos-orange w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">5</span>
-                  <span className="bg-pos-red w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">1</span>
-                  <span className="bg-pos-blue w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">2</span>
-                </span>
-                <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:21 PM</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                <span className="text-gray-400 font-mono text-base font-bold">#394</span>
-                <span className="flex gap-2">
-                  <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black">3</span>
-                  <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black striped-badge text-stroke-black">6</span>
-                  <span className="bg-pos-gray border border-pos-border w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">4</span>
-                </span>
-                <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:14 PM</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                <span className="text-gray-400 font-mono text-base font-bold">#393</span>
-                <span className="flex gap-2">
-                  <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black striped-badge text-stroke-black">6</span>
-                  <span className="bg-pos-blue w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">2</span>
-                  <span className="bg-pos-red w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">1</span>
-                </span>
-                <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:07 PM</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                <span className="text-gray-400 font-mono text-base font-bold">#392</span>
-                <span className="flex gap-2">
-                  <span className="bg-pos-red w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">1</span>
-                  <span className="bg-pos-orange w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-white">5</span>
-                  <span className="bg-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm text-black">3</span>
-                </span>
-                <span className="text-gray-500 font-mono text-xs font-semibold">18/06 12:00 PM</span>
-              </div>
+              {[
+                { num: '#396', dogs: ['bg-pos-blue text-white', 'bg-pos-gray border border-pos-border text-white', 'bg-white text-black'], labels: ['2','4','6'], time: '18/06 12:28 PM' },
+                { num: '#395', dogs: ['bg-pos-orange text-white', 'bg-pos-red text-white', 'bg-pos-blue text-white'], labels: ['5','1','2'], time: '18/06 12:21 PM' },
+                { num: '#394', dogs: ['bg-white text-black', 'bg-white text-black striped-badge text-stroke-black', 'bg-pos-gray border border-pos-border text-white'], labels: ['3','6','4'], time: '18/06 12:14 PM' },
+                { num: '#393', dogs: ['bg-white text-black striped-badge text-stroke-black', 'bg-pos-blue text-white', 'bg-pos-red text-white'], labels: ['6','2','1'], time: '18/06 12:07 PM' },
+                { num: '#392', dogs: ['bg-pos-red text-white', 'bg-pos-orange text-white', 'bg-white text-black'], labels: ['1','5','3'], time: '18/06 12:00 PM' },
+              ].map((row, i) => (
+                <div key={i} className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                  <span className="text-gray-400 font-mono text-xl font-bold">{row.num}</span>
+                  <span className="flex gap-2.5">
+                    {row.dogs.map((cls, j) => (
+                      <span key={j} className={`w-9 h-9 rounded flex items-center justify-center font-bold text-base ${cls}`}>{row.labels[j]}</span>
+                    ))}
+                  </span>
+                  <span className="text-gray-500 font-mono text-sm font-semibold">{row.time}</span>
+                </div>
+              ))}
             </>
           ) : (
             raceHistory.map((race) => {
               const resParts = race.resultado ? race.resultado.split('-') : [];
               return (
-                <div key={race.id} className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-                  <span className="text-gray-400 font-mono text-base font-bold">#{race.numero}</span>
-                  <span className="flex gap-2">
+                <div key={race.id} className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                  <span className="text-gray-400 font-mono text-xl font-bold">#{race.numero}</span>
+                  <span className="flex gap-2.5">
                     {resParts.map((num: string, idx: number) => {
                       const numInt = Number(num);
                       const dogMeta = DOGS_METADATA[numInt - 1];
@@ -172,7 +144,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                       return (
                         <span
                           key={idx}
-                          className={`w-6 h-6 rounded flex items-center justify-center font-bold text-sm border border-black/30 shadow-sm`}
+                          className="w-9 h-9 rounded flex items-center justify-center font-bold text-base border border-black/30 shadow-sm"
                           style={{
                             background: dogMeta.isStripes
                               ? 'repeating-linear-gradient(90deg, #111 0px, #111 4px, #fff 4px, #fff 8px)'
@@ -185,7 +157,7 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
                       );
                     })}
                   </span>
-                  <span className="text-gray-500 font-mono text-xs font-semibold">
+                  <span className="text-gray-500 font-mono text-sm font-semibold">
                     {formatRaceDate(race.finishedAt)} {formatRaceTime(race.finishedAt)}
                   </span>
                 </div>

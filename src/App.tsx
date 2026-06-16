@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, Fragment } from 'react';
 import { Header } from './components/Header';
 import { Lobby } from './pages/Lobby';
 import { DogsPresentation } from './pages/DogsPresentation';
-import { LiveOdds } from './pages/LiveOdds';
+import { ExactaMatrix } from './pages/ExactaMatrix';
 import { OfficialResults } from './pages/OfficialResults';
 import { VideoRace } from './pages/VideoRace';
 import { LoginScreen, isDisplayUnlocked, lockDisplay } from './pages/LoginScreen';
@@ -81,6 +81,12 @@ function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Video preload state
+  const [preloadedVideoUrl, setPreloadedVideoUrl] = useState<string | null>(null);
+  const [preloadedForRaceId, setPreloadedForRaceId] = useState<string | null>(null);
+  const preloadingRef = useRef<boolean>(false);
+  const preloadBlobRef = useRef<string | null>(null);
+
   // Rotation cycle state (only used in OPEN status)
   const openScreens: ScreenType[] = ['LOBBY', 'DOGS', 'ODDS'];
   const openScreenIndexRef = useRef<number>(0);
@@ -127,6 +133,67 @@ function App() {
       socket.disconnect();
     };
   }, []);
+
+  // 1b. Preload video in background when countdown hits ≤10 seconds or status becomes CLOSED
+  const [isVideoPreloading, setIsVideoPreloading] = useState(false);
+
+  useEffect(() => {
+    if (!currentRace?.video) return;
+    if (preloadedForRaceId === currentRace.id || preloadingRef.current) return;
+
+    const statusOk = currentRace.status === 'OPEN' || currentRace.status === 'CLOSED';
+    if (!statusOk) return;
+
+    const doPreload = () => {
+      if (preloadingRef.current || preloadedForRaceId === currentRace.id) return;
+      preloadingRef.current = true;
+      setIsVideoPreloading(true);
+
+      const archivoPath = currentRace.video.archivo || '';
+      const filename = archivoPath.split('/').pop() || `${currentRace.video.nombre}.webm`;
+      console.log(`[Preload] Descargando video carrera #${currentRace.numero}: ${filename}`);
+
+      api.getVideoBlob(filename)
+        .then((blob) => {
+          if (preloadBlobRef.current) URL.revokeObjectURL(preloadBlobRef.current);
+          const url = URL.createObjectURL(blob);
+          preloadBlobRef.current = url;
+          setPreloadedVideoUrl(url);
+          setPreloadedForRaceId(currentRace.id);
+          console.log(`[Preload] ✓ Video listo carrera #${currentRace.numero}`);
+        })
+        .catch((err) => console.error('[Preload] Error:', err))
+        .finally(() => { preloadingRef.current = false; setIsVideoPreloading(false); });
+    };
+
+    // Trigger immediately if CLOSED (race imminent)
+    if (currentRace.status === 'CLOSED') {
+      doPreload();
+      return;
+    }
+
+    // Otherwise poll until countdown ≤ 10 seconds
+    const interval = setInterval(() => {
+      if (!currentRace.closeAt) return;
+      const secsLeft = Math.floor((new Date(currentRace.closeAt).getTime() - Date.now()) / 1000);
+      if (secsLeft <= 10) {
+        clearInterval(interval);
+        doPreload();
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [currentRace?.id, currentRace?.status, preloadedForRaceId]);
+
+  // Cleanup blob URL when race changes
+  useEffect(() => {
+    return () => {
+      if (preloadBlobRef.current) {
+        URL.revokeObjectURL(preloadBlobRef.current);
+        preloadBlobRef.current = null;
+      }
+    };
+  }, [currentRace?.id]);
 
   // 2. Fetch odds and results when current race changes
   useEffect(() => {
@@ -251,11 +318,18 @@ function App() {
         transitionClass = 'animate-fade-slide-dogs';
         break;
       case 'ODDS':
-        screenComponent = <LiveOdds status={currentRace?.status || 'OPEN'} liveOdds={liveOdds} />;
+        screenComponent = <ExactaMatrix liveOdds={liveOdds} raceHistory={raceHistory} />;
         transitionClass = 'animate-fade-odds';
         break;
       case 'VIDEO':
-        screenComponent = <VideoRace currentRace={currentRace} onVideoEnded={handleVideoEnded} />;
+        screenComponent = (
+          <VideoRace
+            currentRace={currentRace}
+            onVideoEnded={handleVideoEnded}
+            preloadedSrc={preloadedForRaceId === currentRace?.id ? preloadedVideoUrl : null}
+            isPreloading={isVideoPreloading}
+          />
+        );
         transitionClass = 'animate-cinematic-video';
         break;
       case 'RESULTS':

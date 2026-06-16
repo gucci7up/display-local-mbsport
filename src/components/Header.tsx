@@ -6,6 +6,7 @@ interface HeaderProps {
   closeAt: string | null;
   autoMode: boolean;
   toggleAutoMode: () => void;
+  onLock?: () => void;
   debugMode?: boolean;
   isTransparent?: boolean;
 }
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   closeAt,
   autoMode,
   toggleAutoMode,
+  onLock,
   debugMode = false,
   isTransparent = false,
 }) => {
@@ -184,19 +186,30 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Section: Time, Date & Auto TV Toggle */}
       <div className="flex items-center gap-6">
-        {/* Auto TV Switch */}
+        {/* Debug controls */}
         {debugMode && (
-          <button
-            onClick={toggleAutoMode}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold transition-all duration-300 ${
-              autoMode
-                ? 'bg-pos-green/20 border-pos-green-light text-pos-green-light shadow-[0_0_12px_rgba(34,197,94,0.45)]'
-                : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white'
-            }`}
-          >
-            <span className={`w-2.5 h-2.5 rounded-full ${autoMode ? 'bg-pos-green-light animate-pulse shadow-[0_0_8px_#22c55e]' : 'bg-gray-500'}`} />
-            {autoMode ? 'MODO TV: AUTO' : 'MODO TV: MANUAL'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleAutoMode}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold transition-all duration-300 ${
+                autoMode
+                  ? 'bg-pos-green/20 border-pos-green-light text-pos-green-light shadow-[0_0_12px_rgba(34,197,94,0.45)]'
+                  : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white'
+              }`}
+            >
+              <span className={`w-2.5 h-2.5 rounded-full ${autoMode ? 'bg-pos-green-light animate-pulse shadow-[0_0_8px_#22c55e]' : 'bg-gray-500'}`} />
+              {autoMode ? 'MODO TV: AUTO' : 'MODO TV: MANUAL'}
+            </button>
+            {onLock && (
+              <button
+                onClick={onLock}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.03] text-gray-400 hover:text-white hover:border-red-500/50 text-xs font-bold transition-all duration-300"
+                title="Bloquear display"
+              >
+                🔒 LOCK
+              </button>
+            )}
+          </div>
         )}
 
         {/* Clock */}

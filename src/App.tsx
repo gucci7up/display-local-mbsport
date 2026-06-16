@@ -5,12 +5,15 @@ import { DogsPresentation } from './pages/DogsPresentation';
 import { LiveOdds } from './pages/LiveOdds';
 import { OfficialResults } from './pages/OfficialResults';
 import { VideoRace } from './pages/VideoRace';
+import { LoginScreen, isDisplayUnlocked, lockDisplay } from './pages/LoginScreen';
 import { api } from './services/api';
 import { socket } from './services/socket';
 
 type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'VIDEO' | 'RESULTS';
 
 function App() {
+  const [unlocked, setUnlocked] = useState<boolean>(() => isDisplayUnlocked());
+
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('LOBBY');
   const [autoMode, setAutoMode] = useState<boolean>(true);
 
@@ -213,11 +216,15 @@ function App() {
     setAutoMode((prev) => {
       const next = !prev;
       if (!next) {
-        // Log manual takeover
         console.log('Manual navigation mode active');
       }
       return next;
     });
+  };
+
+  const handleLock = () => {
+    lockDisplay();
+    setUnlocked(false);
   };
 
   // Render active screen with professional TV transition wraps
@@ -272,6 +279,10 @@ function App() {
     );
   };
 
+  if (!unlocked) {
+    return <LoginScreen onUnlock={() => setUnlocked(true)} />;
+  }
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-white relative stadium-bg">
       {/* Stadium lights breathing top-glow */}
@@ -295,6 +306,7 @@ function App() {
             closeAt={currentRace?.closeAt || null}
             autoMode={autoMode}
             toggleAutoMode={toggleAutoMode}
+            onLock={handleLock}
             debugMode={debugMode}
             isTransparent={currentScreen === 'VIDEO'}
           />

@@ -122,6 +122,7 @@ class ApiService {
   public async getVideoBlob(filename: string) {
     const response = await this.client.get(`/videos/${filename}`, {
       responseType: 'blob',
+      timeout: 120000, // 2 minutos — los videos pueden ser grandes
     });
     return response.data;
   }

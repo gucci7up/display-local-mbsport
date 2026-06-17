@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '../services/api';
 
 interface VideoRaceProps {
@@ -23,9 +23,24 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fallbackIntervalRef = useRef<number | null>(null);
+  // Ref para el estado de descarga — evita que closures stale bloqueen el fallback
+  const isMountedRef = useRef(true);
 
   // Determine current progress (for fallback progress bar)
   const progress = downloadFailed ? (duration - fallbackCountdown) / duration : currentTime / duration;
+
+  // Limpiar isMountedRef al desmontar
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  const triggerFallback = useCallback(() => {
+    if (!isMountedRef.current) return;
+    setIsLoading(false);
+    setDownloadFailed(true);
+    setTimeout(() => { if (isMountedRef.current) setShowStartingBanner(false); }, 2000);
+  }, []);
 
   // 1. Use preloaded blob if available; wait for it if preloading; download only as last resort
   useEffect(() => {
@@ -40,9 +55,9 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
     setShowStartingBanner(true);
 
     const playReady = (src: string) => {
+      if (!active) return;
       setVideoSrc(src);
       setIsLoading(false);
-      // Keep banner 2s then play
       setTimeout(() => {
         if (!active) return;
         setShowStartingBanner(false);
@@ -58,11 +73,9 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
     }
 
     // ── Waiting path: App todavía está descargando en background ──
-    // Mostramos STARTING RACE banner y esperamos a que preloadedSrc llegue via prop.
-    // El efecto se re-ejecuta cuando preloadedSrc cambia de null → url.
     if (isPreloading) {
       console.log(`[VideoRace] Esperando preload en background #${currentRace?.numero}...`);
-      setIsLoading(false); // No mostrar pantalla de carga — solo el banner
+      setIsLoading(false);
       return () => { active = false; };
     }
 
@@ -71,9 +84,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
 
     const loadVideo = async () => {
       if (!currentRace?.video) {
-        setIsLoading(false);
-        setDownloadFailed(true);
-        setTimeout(() => { if (active) setShowStartingBanner(false); }, 2000);
+        triggerFallback();
         return;
       }
       const filename = (currentRace.video.archivo || '').split('/').pop()
@@ -85,17 +96,25 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
         localBlobUrl = URL.createObjectURL(blob);
         playReady(localBlobUrl);
       } catch (err) {
-        console.error('[VideoRace] Error:', err);
-        if (!active) return;
-        setIsLoading(false);
-        setDownloadFailed(true);
-        setTimeout(() => { if (active) setShowStartingBanner(false); }, 2000);
+        console.error('[VideoRace] Error descarga:', err);
+        // Usar isMountedRef en lugar de `active` para que closures stale no bloqueen el fallback
+        triggerFallback();
       }
     };
 
     loadVideo();
     return () => { active = false; if (localBlobUrl) URL.revokeObjectURL(localBlobUrl); };
-  }, [currentRace?.id, preloadedSrc, isPreloading]);
+  }, [currentRace?.id, preloadedSrc, isPreloading, triggerFallback]);
+
+  // 1b. Timer de seguridad: si isLoading sigue activo más de 45s, activar fallback
+  useEffect(() => {
+    if (!isLoading) return;
+    const safety = setTimeout(() => {
+      console.warn('[VideoRace] Safety timeout — activando fallback');
+      triggerFallback();
+    }, 45000);
+    return () => clearTimeout(safety);
+  }, [isLoading, triggerFallback]);
 
   // 2. Handle Fallback Countdown Timer when download fails
   useEffect(() => {

@@ -123,6 +123,23 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
     );
   };
 
+  // Mientras no hay resultados, mostrar pantalla de espera
+  if (!resultsData) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-black select-none">
+        <div className="flex flex-col items-center gap-6 p-10 rounded-3xl glass-panel" style={{ boxShadow: '0 0 60px rgba(245,197,24,0.15)' }}>
+          <div className="w-14 h-14 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" />
+          <span className="font-display font-black text-gradient-gold text-2xl tracking-widest uppercase">
+            Calculando Resultados...
+          </span>
+          <span className="text-gray-500 text-sm tracking-widest uppercase font-bold">
+            Carrera {raceNumber}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col p-6 bg-black select-none overflow-hidden relative">
       {/* Title Bar */}

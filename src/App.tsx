@@ -125,12 +125,16 @@ function App() {
   const handleVideoEnded = () => {
     setPlayedVideoRaceId(currentRace?.id || null);
     setCurrentScreen('RESULTS');
-    // Immediately try to fetch results — the race should be FINISHED by now
-    if (currentRace?.id) {
-      api.getRaceResults(currentRace.id)
-        .then(results => setResultsData(results))
-        .catch(() => {/* results will arrive in next poll */});
-    }
+    // Intentar obtener resultados inmediatamente y reintentar hasta conseguirlos
+    const raceId = currentRace?.id;
+    if (!raceId) return;
+    const tryFetch = (attempt: number) => {
+      api.getRaceResults(raceId)
+        .then(results => { if (results) setResultsData(results); })
+        .catch(() => {});
+      if (attempt < 6) setTimeout(() => tryFetch(attempt + 1), 3000);
+    };
+    tryFetch(0);
   };
 
   // 1. Fetch current race, history and game status
@@ -391,7 +395,7 @@ function App() {
         screenComponent = (
           <OfficialResults
             raceNumber={currentRace?.numero || '---'}
-            resultsData={resultsData || (raceHistory.length > 0 ? raceHistory[0] : null)}
+            resultsData={resultsData}
             liveOdds={liveOdds}
           />
         );

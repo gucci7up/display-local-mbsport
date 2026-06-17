@@ -87,9 +87,14 @@ function App() {
   const [currentRace, setCurrentRace] = useState<any>(null);
   const [liveOdds, setLiveOdds] = useState<any[]>([]);
   const [raceHistory, setRaceHistory] = useState<any[]>([]);
-  const [resultsData, setResultsData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Resultados de la pantalla final: carrera que acaba de terminar (independiente de currentRace)
+  const [finishedRaceResults, setFinishedRaceResults] = useState<any>(null);
+  const [finishedRaceNumber, setFinishedRaceNumber] = useState<any>(null);
+  // Ref que captura la carrera que está en VIDEO para que handleVideoEnded la use aunque currentRace ya cambió
+  const videoRaceRef = useRef<any>(null);
 
   // Video preload state
   const [preloadedVideoUrl, setPreloadedVideoUrl] = useState<string | null>(null);
@@ -122,17 +127,29 @@ function App() {
   const [playedVideoRaceId, setPlayedVideoRaceId] = useState<string | null>(null);
   const [shownResultsRaceId, setShownResultsRaceId] = useState<string | null>(null);
 
+  // Capturar la carrera cuando arranca el video (antes de que currentRace cambie a la siguiente)
+  useEffect(() => {
+    if (currentRace?.status === 'RUNNING') {
+      videoRaceRef.current = currentRace;
+    }
+  }, [currentRace?.id, currentRace?.status]);
+
   const handleVideoEnded = () => {
-    setPlayedVideoRaceId(currentRace?.id || null);
+    // Usar la carrera que estaba en VIDEO, no currentRace (que ya puede ser la siguiente)
+    const finishedRace = videoRaceRef.current || currentRace;
+    const raceId = finishedRace?.id;
+
+    setPlayedVideoRaceId(raceId || null);
+    setFinishedRaceResults(null);   // limpiar mientras carga
+    setFinishedRaceNumber(finishedRace?.numero ?? null);
     setCurrentScreen('RESULTS');
-    // Intentar obtener resultados inmediatamente y reintentar hasta conseguirlos
-    const raceId = currentRace?.id;
+
     if (!raceId) return;
     const tryFetch = (attempt: number) => {
       api.getRaceResults(raceId)
-        .then(results => { if (results) setResultsData(results); })
+        .then(results => { if (results) setFinishedRaceResults(results); })
         .catch(() => {});
-      if (attempt < 6) setTimeout(() => tryFetch(attempt + 1), 3000);
+      if (attempt < 8) setTimeout(() => tryFetch(attempt + 1), 3000);
     };
     tryFetch(0);
   };
@@ -263,13 +280,7 @@ function App() {
         const odds = await api.getLiveOdds(currentRace.id);
         setLiveOdds(odds);
 
-        // Fetch results for any post-race status
-        if (currentRace.status === 'FINISHED' || currentRace.status === 'OFFICIAL') {
-          const results = await api.getRaceResults(currentRace.id);
-          setResultsData(results);
-        } else if (currentRace.status !== 'RUNNING') {
-          setResultsData(null);
-        }
+        // Los resultados para la pantalla RESULTS se manejan en handleVideoEnded
       } catch (err) {
         console.error('Error fetching odds or results:', err);
       }
@@ -394,8 +405,8 @@ function App() {
       case 'RESULTS':
         screenComponent = (
           <OfficialResults
-            raceNumber={currentRace?.numero || '---'}
-            resultsData={resultsData}
+            raceNumber={finishedRaceNumber ?? currentRace?.numero ?? '---'}
+            resultsData={finishedRaceResults}
             liveOdds={liveOdds}
           />
         );

@@ -138,7 +138,7 @@ function App() {
     try {
       const [race, history, gameStatus] = await Promise.all([
         api.getCurrentRace(),
-        api.getRaceHistory(8, agencyId),
+        api.getRaceHistory(8, agencyId).catch(() => api.getRaceHistory(8)),
         api.getGameStatus(agencyId).catch(() => null),
       ]);
 

@@ -3,9 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 interface VideoRaceProps {
   currentRace: any;
   onVideoEnded: () => void;
-  /** Blob URL (blob://...) listo para reproducir, o null si aún no está listo */
   blobUrl: string | null;
-  /** true mientras el blob se está descargando */
   isPreloading: boolean;
 }
 
@@ -16,6 +14,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
   isPreloading,
 }) => {
   const [showStartingBanner, setShowStartingBanner] = useState(true);
+  // 'banner' | 'loading' | 'playing' | 'fallback'
   const [phase, setPhase] = useState<'banner' | 'loading' | 'playing' | 'fallback'>('banner');
   const [fallbackCountdown, setFallbackCountdown] = useState(
     currentRace?.video?.durationSeconds || 42,
@@ -23,15 +22,15 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(currentRace?.video?.durationSeconds || 42);
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const isMountedRef = useRef(true);
+  const videoRef  = useRef<HTMLVideoElement | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => { isMountedRef.current = false; };
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
   }, []);
 
-  // Reset cuando cambia la carrera
+  // ── 1. Reset cuando cambia la carrera ──────────────────────────────────────
   useEffect(() => {
     const d = currentRace?.video?.durationSeconds || 42;
     setDuration(d);
@@ -41,15 +40,11 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
     setShowStartingBanner(true);
 
     const timer = setTimeout(() => {
-      if (!isMountedRef.current) return;
+      if (!isMounted.current) return;
       setShowStartingBanner(false);
-
-      // Decidir qué mostrar después del banner
+      // Solo decidimos qué fase viene — play() lo maneja el effect de fase
       if (blobUrl) {
         setPhase('playing');
-        videoRef.current?.play().catch(() => {
-          if (isMountedRef.current) setPhase('fallback');
-        });
       } else if (isPreloading) {
         setPhase('loading');
       } else {
@@ -58,25 +53,33 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [currentRace?.id]);
+  }, [currentRace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cuando el blob llega mientras estamos en "loading", reproducir inmediatamente
+  // ── 2. Cuando llega el blob mientras esperamos (loading) ───────────────────
   useEffect(() => {
     if (phase !== 'loading' || !blobUrl) return;
-    setPhase('playing');
-    videoRef.current?.play().catch(() => {
-      if (isMountedRef.current) setPhase('fallback');
-    });
+    setPhase('playing'); // play() se llama en el effect de abajo
   }, [blobUrl, phase]);
 
-  // Si la descarga falla mientras estamos en "loading"
+  // ── 3. Si la descarga falla durante loading ────────────────────────────────
   useEffect(() => {
     if (phase === 'loading' && !isPreloading && !blobUrl) {
       setPhase('fallback');
     }
   }, [isPreloading, blobUrl, phase]);
 
-  // Countdown del fallback
+  // ── 4. Llamar play() DESPUÉS del render en que el <video> aparece ──────────
+  // Este effect corre tras el commit del DOM, así videoRef.current ya está seteado.
+  useEffect(() => {
+    if (phase !== 'playing' || !blobUrl) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => {
+      if (isMounted.current) setPhase('fallback');
+    });
+  }, [phase, blobUrl]);
+
+  // ── 5. Countdown del fallback ──────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'fallback') return;
     const id = setInterval(() => {
@@ -104,8 +107,10 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
       {/* STARTING BANNER */}
       {showStartingBanner && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 animate-fade-in">
-          <div className="text-center p-10 rounded-3xl shadow-gold-glow animate-scale-up glass-panel"
-            style={{ boxShadow: '0 0 60px rgba(245,197,24,0.35)', borderColor: 'rgba(245,197,24,0.5)' }}>
+          <div
+            className="text-center p-10 rounded-3xl shadow-gold-glow animate-scale-up glass-panel"
+            style={{ boxShadow: '0 0 60px rgba(245,197,24,0.35)', borderColor: 'rgba(245,197,24,0.5)' }}
+          >
             <h1 className="font-display font-black text-6xl md:text-8xl text-gradient-gold tracking-widest leading-none">
               🏁 STARTING RACE
             </h1>
@@ -121,13 +126,15 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
         </div>
       )}
 
-      {/* VIDEO */}
-      {blobUrl && (phase === 'playing' || phase === 'loading') && (
+      {/* VIDEO — siempre en el DOM cuando hay blobUrl, para que el effect
+          de play() tenga acceso al ref tras el render */}
+      {blobUrl && (
         <video
           ref={videoRef}
           key={blobUrl}
           src={blobUrl}
           className="absolute inset-0 w-full h-full object-cover z-0"
+          style={{ visibility: phase === 'playing' ? 'visible' : 'hidden' }}
           muted
           playsInline
           onTimeUpdate={() => {
@@ -137,15 +144,17 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
             }
           }}
           onEnded={onVideoEnded}
-          onError={() => { if (isMountedRef.current) setPhase('fallback'); }}
+          onError={() => { if (isMounted.current && phase === 'playing') setPhase('fallback'); }}
         />
       )}
 
-      {/* DESCARGANDO VIDEO */}
-      {phase === 'loading' && !blobUrl && (
+      {/* CARGANDO TRANSMISIÓN */}
+      {phase === 'loading' && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-10">
-          <div className="text-center p-10 rounded-3xl glass-panel"
-            style={{ borderColor: 'rgba(245,197,24,0.3)' }}>
+          <div
+            className="text-center p-10 rounded-3xl glass-panel"
+            style={{ borderColor: 'rgba(245,197,24,0.3)' }}
+          >
             <div className="w-16 h-16 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin mx-auto" />
             <h2 className="font-display font-black text-white text-3xl tracking-widest uppercase mt-6">
               Cargando transmisión

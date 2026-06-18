@@ -96,8 +96,12 @@ function App() {
   // Ref que captura la carrera que está en VIDEO para que handleVideoEnded la use aunque currentRace ya cambió
   const videoRaceRef = useRef<any>(null);
 
-  // Video URL para streaming directo (sin descarga de blob)
-  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  // Blob preloading — axios adjunta el JWT automáticamente, evitando el problema
+  // de que <video src> no puede enviar el Bearer token.
+  const [preloadedBlobUrl, setPreloadedBlobUrl]     = useState<string | null>(null);
+  const [preloadedForRaceId, setPreloadedForRaceId] = useState<string | null>(null);
+  const [isVideoPreloading, setIsVideoPreloading]   = useState(false);
+  const activeDownloadRaceRef = useRef<string | null>(null);
 
   // Jackpot state
   const [jackpotAmount, setJackpotAmount] = useState<number>(0);
@@ -190,18 +194,41 @@ function App() {
     };
   }, []);
 
-  // 1b. Calcular URL del video cuando hay carrera con video.
-  // Depende de status porque el backend sanitiza archivo/nombre hasta que
-  // la carrera pasa a RUNNING (sanitize-result.ts solo revela esos campos
-  // cuando status === RUNNING, FINISHED o role === ADMIN).
+  // 1b. Descargar el blob del video en cuanto el archivo esté disponible.
+  // La descarga usa axios, que adjunta el Bearer token automáticamente.
+  // Arranca en fase OPEN (una vez que el backend exponga video.archivo)
+  // así el video está listo cuando empieza la carrera.
   useEffect(() => {
-    if (!currentRace?.video) { setCurrentVideoUrl(null); return; }
+    const raceId = currentRace?.id;
+    if (!raceId || !currentRace?.video) return;
+
     const archivoPath: string = currentRace.video.archivo || '';
     const filename = archivoPath.split('/').pop() ||
       (currentRace.video.nombre ? `${currentRace.video.nombre}.webm` : null);
-    if (!filename) { setCurrentVideoUrl(null); return; }
-    setCurrentVideoUrl(api.getVideoUrl(filename));
-  }, [currentRace?.id, currentRace?.status]);
+    if (!filename) return;
+
+    // Ya tenemos el blob para esta carrera
+    if (preloadedForRaceId === raceId && preloadedBlobUrl) return;
+    // Ya estamos descargando esta misma carrera
+    if (activeDownloadRaceRef.current === raceId) return;
+
+    activeDownloadRaceRef.current = raceId;
+    setIsVideoPreloading(true);
+
+    api.getVideoBlob(filename)
+      .then(blob => {
+        if (activeDownloadRaceRef.current !== raceId) return; // carrera cambió
+        const url = URL.createObjectURL(blob);
+        setPreloadedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return url; });
+        setPreloadedForRaceId(raceId);
+        setIsVideoPreloading(false);
+      })
+      .catch(() => {
+        if (activeDownloadRaceRef.current === raceId) {
+          setIsVideoPreloading(false);
+        }
+      });
+  }, [currentRace?.id, currentRace?.video?.archivo]);
 
   // Detect jackpot win from race history
   useEffect(() => {
@@ -364,7 +391,8 @@ function App() {
           <VideoRace
             currentRace={currentRace}
             onVideoEnded={handleVideoEnded}
-            videoUrl={currentVideoUrl}
+            blobUrl={preloadedForRaceId === currentRace?.id ? preloadedBlobUrl : null}
+            isPreloading={isVideoPreloading}
           />
         );
         transitionClass = 'animate-cinematic-video';
@@ -491,19 +519,6 @@ function App() {
         />
       )}
 
-      {/* Video precarga silenciosa — el navegador bufferiza el video
-          mientras la carrera está OPEN/CLOSED para que al entrar en
-          VIDEO empiece a reproducir de inmediato desde caché */}
-      {currentVideoUrl && currentScreen !== 'VIDEO' && (currentRace?.status === 'OPEN' || currentRace?.status === 'CLOSED') && (
-        <video
-          key={currentVideoUrl}
-          src={currentVideoUrl}
-          preload="auto"
-          muted
-          playsInline
-          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-        />
-      )}
     </div>
   );
 }

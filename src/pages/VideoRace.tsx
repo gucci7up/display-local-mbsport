@@ -34,7 +34,12 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
     const timer = setTimeout(() => {
       if (!isMountedRef.current) return;
       setShowStartingBanner(false);
-      videoRef.current?.play().catch(() => {
+      if (!videoRef.current) {
+        // No video element (videoUrl is null) — go straight to fallback countdown
+        setVideoFailed(true);
+        return;
+      }
+      videoRef.current.play().catch(() => {
         if (isMountedRef.current) setVideoFailed(true);
       });
     }, 2000);

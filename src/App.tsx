@@ -96,11 +96,8 @@ function App() {
   // Ref que captura la carrera que está en VIDEO para que handleVideoEnded la use aunque currentRace ya cambió
   const videoRaceRef = useRef<any>(null);
 
-  // Video preload state
-  const [preloadedVideoUrl, setPreloadedVideoUrl] = useState<string | null>(null);
-  const [preloadedForRaceId, setPreloadedForRaceId] = useState<string | null>(null);
-  const preloadingRef = useRef<boolean>(false);
-  const preloadBlobRef = useRef<string | null>(null);
+  // Video URL para streaming directo (sin descarga de blob)
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
 
   // Jackpot state
   const [jackpotAmount, setJackpotAmount] = useState<number>(0);
@@ -193,46 +190,12 @@ function App() {
     };
   }, []);
 
-  // 1b. Preload video as soon as we know the race and it has a video (maximum download time)
-  const [isVideoPreloading, setIsVideoPreloading] = useState(false);
-
+  // 1b. Calcular URL del video en cuanto hay carrera con video asignado
   useEffect(() => {
-    if (!currentRace?.video) return;
-    if (preloadedForRaceId === currentRace.id || preloadingRef.current) return;
-
-    const statusOk = currentRace.status === 'OPEN' || currentRace.status === 'CLOSED';
-    if (!statusOk) return;
-
-    preloadingRef.current = true;
-    setIsVideoPreloading(true);
-
+    if (!currentRace?.video) { setCurrentVideoUrl(null); return; }
     const archivoPath = currentRace.video.archivo || '';
     const filename = archivoPath.split('/').pop() || `${currentRace.video.nombre}.webm`;
-    console.log(`[Preload] Descargando video carrera #${currentRace.numero}: ${filename}`);
-
-    api.getVideoBlob(filename)
-      .then((blob) => {
-        if (preloadBlobRef.current) URL.revokeObjectURL(preloadBlobRef.current);
-        const url = URL.createObjectURL(blob);
-        preloadBlobRef.current = url;
-        setPreloadedVideoUrl(url);
-        setPreloadedForRaceId(currentRace.id);
-        console.log(`[Preload] ✓ Video listo carrera #${currentRace.numero}`);
-      })
-      .catch((err) => console.error('[Preload] Error:', err))
-      .finally(() => { preloadingRef.current = false; setIsVideoPreloading(false); });
-
-    return () => {};
-  }, [currentRace?.id, currentRace?.status, preloadedForRaceId]);
-
-  // Cleanup blob URL when race changes
-  useEffect(() => {
-    return () => {
-      if (preloadBlobRef.current) {
-        URL.revokeObjectURL(preloadBlobRef.current);
-        preloadBlobRef.current = null;
-      }
-    };
+    setCurrentVideoUrl(api.getVideoUrl(filename));
   }, [currentRace?.id]);
 
   // Detect jackpot win from race history
@@ -396,8 +359,7 @@ function App() {
           <VideoRace
             currentRace={currentRace}
             onVideoEnded={handleVideoEnded}
-            preloadedSrc={preloadedForRaceId === currentRace?.id ? preloadedVideoUrl : null}
-            isPreloading={isVideoPreloading}
+            videoUrl={currentVideoUrl}
           />
         );
         transitionClass = 'animate-cinematic-video';
@@ -521,6 +483,20 @@ function App() {
         <BonusAnimation
           bonusLabel={bonusLabelState}
           onClose={() => setShowBonus(false)}
+        />
+      )}
+
+      {/* Video precarga silenciosa — el navegador bufferiza el video
+          mientras la carrera está OPEN/CLOSED para que al entrar en
+          VIDEO empiece a reproducir de inmediato desde caché */}
+      {currentVideoUrl && currentScreen !== 'VIDEO' && (currentRace?.status === 'OPEN' || currentRace?.status === 'CLOSED') && (
+        <video
+          key={currentVideoUrl}
+          src={currentVideoUrl}
+          preload="auto"
+          muted
+          playsInline
+          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
         />
       )}
     </div>

@@ -1,175 +1,73 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { api } from '../services/api';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface VideoRaceProps {
   currentRace: any;
   onVideoEnded: () => void;
-  preloadedSrc?: string | null;
-  isPreloading?: boolean;
+  videoUrl: string | null;
 }
 
-export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded, preloadedSrc, isPreloading }) => {
-  // If preloadedSrc is already available, start ready — no loading needed
-  const [videoSrc, setVideoSrc] = useState<string | null>(preloadedSrc ?? null);
-  // isLoading = true only when we need to download ourselves (not preloaded, not preloading)
-  const [isLoading, setIsLoading] = useState<boolean>(!preloadedSrc && !isPreloading);
-  const [downloadFailed, setDownloadFailed] = useState<boolean>(false);
-  const [showStartingBanner, setShowStartingBanner] = useState<boolean>(true);
-  
-  // Video playback time or fallback countdown progress
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(42);
-  const [fallbackCountdown, setFallbackCountdown] = useState<number>(42);
+export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded, videoUrl }) => {
+  const [showStartingBanner, setShowStartingBanner] = useState(true);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [fallbackCountdown, setFallbackCountdown] = useState(42);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(currentRace?.video?.durationSeconds || 42);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const fallbackIntervalRef = useRef<number | null>(null);
-  // Ref para el estado de descarga — evita que closures stale bloqueen el fallback
   const isMountedRef = useRef(true);
 
-  // Determine current progress (for fallback progress bar)
-  const progress = downloadFailed ? (duration - fallbackCountdown) / duration : currentTime / duration;
-
-  // Limpiar isMountedRef al desmontar
   useEffect(() => {
     isMountedRef.current = true;
     return () => { isMountedRef.current = false; };
   }, []);
 
-  const triggerFallback = useCallback(() => {
-    if (!isMountedRef.current) return;
-    setIsLoading(false);
-    setDownloadFailed(true);
-    setTimeout(() => { if (isMountedRef.current) setShowStartingBanner(false); }, 2000);
-  }, []);
-
-  // 1. Use preloaded blob if available; wait for it if preloading; download only as last resort
+  // Reset state when race changes
   useEffect(() => {
-    let active = true;
-    let localBlobUrl: string | null = null;
-
-    const videoDuration = currentRace?.video?.durationSeconds || 42;
-    setDuration(videoDuration);
-    setFallbackCountdown(videoDuration);
+    const d = currentRace?.video?.durationSeconds || 42;
+    setDuration(d);
+    setFallbackCountdown(d);
     setCurrentTime(0);
-    setDownloadFailed(false);
+    setVideoFailed(false);
     setShowStartingBanner(true);
 
-    const playReady = (src: string) => {
-      if (!active) return;
-      setVideoSrc(src);
-      setIsLoading(false);
-      setTimeout(() => {
-        if (!active) return;
-        setShowStartingBanner(false);
-        videoRef.current?.play().catch(err => console.error('Autoplay failed:', err));
-      }, 2000);
-    };
+    // Show banner 2s then play
+    const timer = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      setShowStartingBanner(false);
+      videoRef.current?.play().catch(() => {
+        if (isMountedRef.current) setVideoFailed(true);
+      });
+    }, 2000);
 
-    // ── Fast path: preload ya terminó ──
-    if (preloadedSrc) {
-      console.log(`[VideoRace] Video precargado listo #${currentRace?.numero}`);
-      playReady(preloadedSrc);
-      return () => { active = false; };
-    }
+    return () => clearTimeout(timer);
+  }, [currentRace?.id]);
 
-    // ── Waiting path: App todavía está descargando en background ──
-    if (isPreloading) {
-      console.log(`[VideoRace] Esperando preload en background #${currentRace?.numero}...`);
-      setIsLoading(false);
-      return () => { active = false; };
-    }
-
-    // ── Slow path: ni preloaded ni preloading — descargar ahora ──
-    setIsLoading(true);
-
-    const loadVideo = async () => {
-      if (!currentRace?.video) {
-        triggerFallback();
-        return;
-      }
-      const filename = (currentRace.video.archivo || '').split('/').pop()
-        || `${currentRace.video.nombre}.webm`;
-      console.log(`[VideoRace] Descarga directa #${currentRace.numero}: ${filename}`);
-      try {
-        const blob = await api.getVideoBlob(filename);
-        if (!active) return;
-        localBlobUrl = URL.createObjectURL(blob);
-        playReady(localBlobUrl);
-      } catch (err) {
-        console.error('[VideoRace] Error descarga:', err);
-        // Usar isMountedRef en lugar de `active` para que closures stale no bloqueen el fallback
-        triggerFallback();
-      }
-    };
-
-    loadVideo();
-    return () => { active = false; if (localBlobUrl) URL.revokeObjectURL(localBlobUrl); };
-  }, [currentRace?.id, preloadedSrc, isPreloading, triggerFallback]);
-
-  // 1b. Timer de seguridad: si isLoading sigue activo más de 45s, activar fallback
+  // Fallback countdown when video fails
   useEffect(() => {
-    if (!isLoading) return;
-    const safety = setTimeout(() => {
-      console.warn('[VideoRace] Safety timeout — activando fallback');
-      triggerFallback();
-    }, 45000);
-    return () => clearTimeout(safety);
-  }, [isLoading, triggerFallback]);
+    if (!videoFailed || showStartingBanner) return;
+    const id = setInterval(() => {
+      setFallbackCountdown((prev) => {
+        if (prev <= 1) { clearInterval(id); onVideoEnded(); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [videoFailed, showStartingBanner, onVideoEnded]);
 
-  // 2. Handle Fallback Countdown Timer when download fails
-  useEffect(() => {
-    if (fallbackIntervalRef.current) {
-      clearInterval(fallbackIntervalRef.current);
-      fallbackIntervalRef.current = null;
-    }
+  const progress = videoFailed
+    ? (duration - fallbackCountdown) / duration
+    : duration > 0 ? currentTime / duration : 0;
 
-    if (downloadFailed && !showStartingBanner) {
-      fallbackIntervalRef.current = setInterval(() => {
-        setFallbackCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(fallbackIntervalRef.current!);
-            onVideoEnded();
-            return 0;
-          }
-          return prev - 1;
-        }) as unknown as number;
-      }, 1000) as unknown as number;
-    }
-
-    return () => {
-      if (fallbackIntervalRef.current) {
-        clearInterval(fallbackIntervalRef.current);
-      }
-    };
-  }, [downloadFailed, showStartingBanner]);
-
-  // Handle video element time update and ended events
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-      if (videoRef.current.duration) {
-        setDuration(videoRef.current.duration);
-      }
-    }
-  };
-
-  const handleVideoEnded = () => {
-    onVideoEnded();
-  };
-
-  // Helper to format remaining time MM:SS
-  const formatSeconds = (totalSecs: number) => {
-    const secs = Math.max(0, Math.floor(totalSecs));
-    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+  const formatSeconds = (s: number) => {
+    const t = Math.max(0, Math.floor(s));
+    return `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="flex-1 flex flex-col justify-between p-6 relative bg-black overflow-hidden select-none w-full h-full z-10">
-      
-      {/* 1. STARTING BANNER OVERLAY */}
-      {showStartingBanner && !isLoading && (
+
+      {/* STARTING BANNER */}
+      {showStartingBanner && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 animate-fade-in">
           <div className="text-center p-10 rounded-3xl shadow-gold-glow animate-scale-up glass-panel" style={{ boxShadow: '0 0 60px rgba(245,197,24,0.35)', borderColor: 'rgba(245,197,24,0.5)' }}>
             <h1 className="font-display font-black text-6xl md:text-8xl text-gradient-gold tracking-widest leading-none">
@@ -187,65 +85,46 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
         </div>
       )}
 
-      {/* 2. LOADING STATE */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-40">
-          <div className="flex flex-col items-center p-8 rounded-2xl shadow-card glass-panel">
-            <div className="w-16 h-16 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" />
-            <h2 className="text-gradient-gold font-display font-black text-xl tracking-widest mt-6 uppercase">
-              Conectando con la Transmisión
-            </h2>
-            <p className="text-gray-400 font-mono text-xs mt-2 uppercase tracking-wider">
-              Descargando Feed de Video de la API...
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 3. VIDEO RENDER */}
-      {!isLoading && !downloadFailed && videoSrc && (
+      {/* VIDEO — siempre en el DOM para que el navegador bufferice inmediatamente */}
+      {videoUrl && !videoFailed && (
         <video
           ref={videoRef}
-          src={videoSrc}
+          key={videoUrl}
+          src={videoUrl}
           className="absolute inset-0 w-full h-full object-cover z-0"
-          autoPlay
+          preload="auto"
           muted
           playsInline
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleVideoEnded}
+          onTimeUpdate={() => {
+            if (videoRef.current) {
+              setCurrentTime(videoRef.current.currentTime);
+              if (videoRef.current.duration) setDuration(videoRef.current.duration);
+            }
+          }}
+          onEnded={onVideoEnded}
+          onError={() => { if (isMountedRef.current) setVideoFailed(true); }}
         />
       )}
 
-      {/* 4. CONTINGENCY FALLBACK GRAPHICS DISPLAY */}
-      {!isLoading && downloadFailed && (
+      {/* FALLBACK cuando el video falla */}
+      {videoFailed && !showStartingBanner && (
         <div className="absolute inset-0 bg-gradient-to-tr from-black via-pos-gray/80 to-black z-0 flex flex-col items-center justify-center p-12 overflow-hidden">
-          {/* Animated Stadium/Radar Background Grid Effect */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(245,197,24,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(245,197,24,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none opacity-40" />
-          
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pos-yellow/5 rounded-full blur-[100px] pointer-events-none animate-pulse" />
-          
           <div className="text-center z-10 max-w-2xl p-8 rounded-3xl shadow-card glass-panel">
             <div className="inline-flex items-center gap-3 bg-red-600/90 text-white font-display font-black text-sm tracking-widest px-6 py-2 rounded-full border border-red-500 uppercase animate-pulse mb-6">
               <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
               Transmisión de Contingencia
             </div>
-
             <h1 className="font-display font-black text-white text-5xl tracking-wide uppercase leading-none">
               CARRERA {currentRace?.numero || '---'}
             </h1>
-
             <p className="text-gray-400 font-display font-bold tracking-widest text-sm uppercase mt-3">
               GALGOS EN COMPETENCIA - CIRCUITO MBSPORT
             </p>
-
-            {/* Circular Race Track Progress Loader */}
             <div className="mt-8 flex justify-center relative">
               <div className="w-40 h-40 rounded-full border-4 border-pos-border flex flex-col items-center justify-center relative shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
-                {/* Spinning border overlay */}
-                <div
-                  className="absolute inset-0 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin"
-                  style={{ animationDuration: '6s' }}
-                />
+                <div className="absolute inset-0 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" style={{ animationDuration: '6s' }} />
                 <span className="text-[10px] font-black text-gray-500 tracking-widest uppercase">CRONÓMETRO</span>
                 <span className="text-4xl font-extrabold text-gradient-gold font-mono mt-1 tracking-wider leading-none">
                   {formatSeconds(fallbackCountdown)}
@@ -253,8 +132,6 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
                 <span className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">EN CURSO</span>
               </div>
             </div>
-
-            {/* Track Progress Bar */}
             <div className="w-full bg-pos-gray/80 border border-pos-border h-3.5 rounded-full mt-8 overflow-hidden relative">
               <div
                 className="bg-gold-gradient h-full rounded-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(245,197,24,0.5)]"
@@ -268,7 +145,6 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded,
           </div>
         </div>
       )}
-
     </div>
   );
 };

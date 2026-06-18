@@ -119,10 +119,15 @@ class ApiService {
     return response.data;
   }
 
+  public getVideoUrl(filename: string): string {
+    return `${API_URL}/videos/${filename}`;
+  }
+
+  /** @deprecated usa getVideoUrl + <video src> para streaming nativo */
   public async getVideoBlob(filename: string) {
     const response = await this.client.get(`/videos/${filename}`, {
       responseType: 'blob',
-      timeout: 120000, // 2 minutos — los videos pueden ser grandes
+      timeout: 120000,
     });
     return response.data;
   }

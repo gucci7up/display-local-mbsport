@@ -7,6 +7,7 @@ interface HeaderProps {
   autoMode: boolean;
   toggleAutoMode: () => void;
   onLock?: () => void;
+  onChangeAgency?: () => void;
   debugMode?: boolean;
   isTransparent?: boolean;
   jackpotAmount?: number;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   autoMode,
   toggleAutoMode,
   onLock,
+  onChangeAgency,
   debugMode = false,
   isTransparent = false,
   jackpotAmount = 0,
@@ -218,6 +220,21 @@ export const Header: React.FC<HeaderProps> = ({
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: autoMode ? '#22c55e' : '#4b5563', boxShadow: autoMode ? '0 0 6px #22c55e' : 'none' }} />
               {autoMode ? 'MODO TV: AUTO' : 'MODO TV: MANUAL'}
             </button>
+            {onChangeAgency && (
+              <button
+                onClick={onChangeAgency}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 16px', borderRadius: 999,
+                  border: '1px solid rgba(245,197,24,0.25)',
+                  background: 'rgba(245,197,24,0.05)',
+                  color: '#b8963a', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.3s',
+                }}
+              >
+                ⚙ AGENCIA
+              </button>
+            )}
             {onLock && (
               <button
                 onClick={onLock}

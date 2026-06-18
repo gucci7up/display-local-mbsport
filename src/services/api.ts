@@ -4,11 +4,13 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 const API_URL = '/api-proxy';
 const DEFAULT_EMAIL = 'display@mbsport.com';
 const DEFAULT_PASSWORD = '20260615';
+const AGENCY_STORAGE_KEY = 'display_agency_id';
 
 class ApiService {
   private client: AxiosInstance;
   private token: string | null = null;
   private isAuthenticating: Promise<string> | null = null;
+  private displayAgencyId: string | null = localStorage.getItem(AGENCY_STORAGE_KEY);
 
   constructor() {
     this.client = axios.create({
@@ -96,15 +98,37 @@ class ApiService {
     return this.isAuthenticating;
   }
 
-  // API Endpoints
+  // ─── Agency configuration (stored in localStorage) ──────────────────────────
+
+  public getDisplayAgencyId(): string | null {
+    return this.displayAgencyId;
+  }
+
+  public setDisplayAgencyId(id: string | null): void {
+    this.displayAgencyId = id;
+    if (id) {
+      localStorage.setItem(AGENCY_STORAGE_KEY, id);
+    } else {
+      localStorage.removeItem(AGENCY_STORAGE_KEY);
+    }
+  }
+
+  public async getAgencies(): Promise<{ id: string; name: string; code: string; active: boolean }[]> {
+    const response = await this.client.get('/agencies');
+    return response.data;
+  }
+
+  // ─── API Endpoints ────────────────────────────────────────────────────────────
+
   public async getCurrentRace() {
     const response = await this.client.get('/races/current');
     return response.data;
   }
 
   public async getRaceHistory(limit = 5, agencyId?: string) {
+    const effectiveId = agencyId ?? this.displayAgencyId ?? undefined;
     const params = new URLSearchParams({ limit: String(limit) });
-    if (agencyId) params.set('agencyId', agencyId);
+    if (effectiveId) params.set('agencyId', effectiveId);
     const response = await this.client.get(`/races/history?${params.toString()}`);
     return response.data;
   }
@@ -135,7 +159,8 @@ class ApiService {
   }
 
   public async getGameStatus(agencyId?: string) {
-    const url = agencyId ? `/race-engine/status?agencyId=${agencyId}` : '/race-engine/status';
+    const effectiveId = agencyId ?? this.displayAgencyId ?? undefined;
+    const url = effectiveId ? `/race-engine/status?agencyId=${effectiveId}` : '/race-engine/status';
     const response = await this.client.get(url);
     return response.data;
   }

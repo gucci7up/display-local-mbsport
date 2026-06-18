@@ -120,9 +120,7 @@ class ApiService {
   }
 
   public getVideoUrl(filename: string): string {
-    // Direct URL to API server — bypasses the display's Nginx proxy so that
-    // HTTP Range headers (required for native video streaming) are not stripped.
-    return `https://api.mbsport.lat/videos/${filename}`;
+    return `${API_URL}/videos/${filename}`;
   }
 
   /** @deprecated usa getVideoUrl + <video src> para streaming nativo */

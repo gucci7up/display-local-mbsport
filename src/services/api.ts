@@ -120,7 +120,9 @@ class ApiService {
   }
 
   public getVideoUrl(filename: string): string {
-    return `${API_URL}/videos/${filename}`;
+    // URL directa al servidor de videos — evita buffering del proxy Nginx
+    // del display que puede interferir con streaming de archivos grandes.
+    return `https://api.mbsport.lat/videos/${filename}`;
   }
 
   /** @deprecated usa getVideoUrl + <video src> para streaming nativo */

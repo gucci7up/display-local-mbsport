@@ -190,13 +190,18 @@ function App() {
     };
   }, []);
 
-  // 1b. Calcular URL del video en cuanto hay carrera con video asignado
+  // 1b. Calcular URL del video cuando hay carrera con video.
+  // Depende de status porque el backend sanitiza archivo/nombre hasta que
+  // la carrera pasa a RUNNING (sanitize-result.ts solo revela esos campos
+  // cuando status === RUNNING, FINISHED o role === ADMIN).
   useEffect(() => {
     if (!currentRace?.video) { setCurrentVideoUrl(null); return; }
-    const archivoPath = currentRace.video.archivo || '';
-    const filename = archivoPath.split('/').pop() || `${currentRace.video.nombre}.webm`;
+    const archivoPath: string = currentRace.video.archivo || '';
+    const filename = archivoPath.split('/').pop() ||
+      (currentRace.video.nombre ? `${currentRace.video.nombre}.webm` : null);
+    if (!filename) { setCurrentVideoUrl(null); return; }
     setCurrentVideoUrl(api.getVideoUrl(filename));
-  }, [currentRace?.id]);
+  }, [currentRace?.id, currentRace?.status]);
 
   // Detect jackpot win from race history
   useEffect(() => {

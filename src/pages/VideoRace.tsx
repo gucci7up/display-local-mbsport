@@ -80,7 +80,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
   useEffect(() => {
     if (phase !== 'fallback') return;
     const id = setInterval(() => {
-      setFallbackCountdown(prev => {
+      setFallbackCountdown((prev: number) => {
         if (prev <= 1) { clearInterval(id); onVideoEnded(); return 0; }
         return prev - 1;
       });

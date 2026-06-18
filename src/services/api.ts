@@ -98,6 +98,18 @@ class ApiService {
     return this.isAuthenticating;
   }
 
+  // ─── Auth helpers ─────────────────────────────────────────────────────────────
+
+  public getToken(): string | null {
+    return this.token;
+  }
+
+  public getHlsUrl(archivo: string): string {
+    const filename = archivo.split('/').pop() || archivo;
+    const name = filename.replace(/\.[^.]+$/, '');
+    return `https://api.mbsport.lat/videos/hls/${name}/playlist.m3u8`;
+  }
+
   // ─── Agency configuration (stored in localStorage) ──────────────────────────
 
   public getDisplayAgencyId(): string | null {

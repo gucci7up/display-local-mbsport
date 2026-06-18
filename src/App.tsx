@@ -93,12 +93,6 @@ function App() {
   // Ref que captura la carrera que está en VIDEO para que handleVideoEnded la use aunque currentRace ya cambió
   const videoRaceRef = useRef<any>(null);
 
-  // Blob preloading — axios adjunta el JWT automáticamente, evitando el problema
-  // de que <video src> no puede enviar el Bearer token.
-  const [preloadedBlobUrl, setPreloadedBlobUrl]     = useState<string | null>(null);
-  const [preloadedForRaceId, setPreloadedForRaceId] = useState<string | null>(null);
-  const [isVideoPreloading, setIsVideoPreloading]   = useState(false);
-  const activeDownloadRaceRef = useRef<string | null>(null);
 
   // Jackpot state
   const [jackpotAmount, setJackpotAmount] = useState<number>(0);
@@ -191,41 +185,6 @@ function App() {
     };
   }, []);
 
-  // 1b. Descargar el blob del video en cuanto el archivo esté disponible.
-  // La descarga usa axios, que adjunta el Bearer token automáticamente.
-  // Arranca en fase OPEN (una vez que el backend exponga video.archivo)
-  // así el video está listo cuando empieza la carrera.
-  useEffect(() => {
-    const raceId = currentRace?.id;
-    if (!raceId || !currentRace?.video) return;
-
-    const archivoPath: string = currentRace.video.archivo || '';
-    const filename = archivoPath.split('/').pop() ||
-      (currentRace.video.nombre ? `${currentRace.video.nombre}.webm` : null);
-    if (!filename) return;
-
-    // Ya tenemos el blob para esta carrera
-    if (preloadedForRaceId === raceId && preloadedBlobUrl) return;
-    // Ya estamos descargando esta misma carrera
-    if (activeDownloadRaceRef.current === raceId) return;
-
-    activeDownloadRaceRef.current = raceId;
-    setIsVideoPreloading(true);
-
-    api.getVideoBlob(filename)
-      .then(blob => {
-        if (activeDownloadRaceRef.current !== raceId) return; // carrera cambió
-        const url = URL.createObjectURL(blob);
-        setPreloadedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return url; });
-        setPreloadedForRaceId(raceId);
-        setIsVideoPreloading(false);
-      })
-      .catch(() => {
-        if (activeDownloadRaceRef.current === raceId) {
-          setIsVideoPreloading(false);
-        }
-      });
-  }, [currentRace?.id, currentRace?.video?.archivo]);
 
   // Detect jackpot win from race history
   useEffect(() => {
@@ -393,8 +352,6 @@ function App() {
           <VideoRace
             currentRace={currentRace}
             onVideoEnded={handleVideoEnded}
-            blobUrl={preloadedForRaceId === currentRace?.id ? preloadedBlobUrl : null}
-            isPreloading={isVideoPreloading}
           />
         );
         transitionClass = 'animate-cinematic-video';

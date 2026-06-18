@@ -1,51 +1,54 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
+import { api } from '../services/api';
 
 interface VideoRaceProps {
   currentRace: any;
   onVideoEnded: () => void;
-  blobUrl: string | null;
-  isPreloading: boolean;
 }
 
-export const VideoRace: React.FC<VideoRaceProps> = ({
-  currentRace,
-  onVideoEnded,
-  blobUrl,
-  isPreloading,
-}) => {
-  const [showStartingBanner, setShowStartingBanner] = useState(true);
-  // 'banner' | 'loading' | 'playing' | 'fallback'
-  const [phase, setPhase] = useState<'banner' | 'loading' | 'playing' | 'fallback'>('banner');
+type Phase = 'banner' | 'loading' | 'playing' | 'fallback';
+
+export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded }) => {
+  const [phase, setPhase] = useState<Phase>('banner');
   const [fallbackCountdown, setFallbackCountdown] = useState(
     currentRace?.video?.durationSeconds || 42,
   );
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(currentRace?.video?.durationSeconds || 42);
 
-  const videoRef  = useRef<HTMLVideoElement | null>(null);
+  const videoRef  = useRef<HTMLVideoElement>(null);
+  const hlsRef    = useRef<Hls | null>(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
-    return () => { isMounted.current = false; };
+    return () => {
+      isMounted.current = false;
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
+    };
   }, []);
 
-  // ── 1. Reset cuando cambia la carrera ──────────────────────────────────────
+  // ── Reset al cambiar de carrera ────────────────────────────────────────────
   useEffect(() => {
     const d = currentRace?.video?.durationSeconds || 42;
     setDuration(d);
     setFallbackCountdown(d);
     setCurrentTime(0);
     setPhase('banner');
-    setShowStartingBanner(true);
+
+    // Destruir instancia HLS anterior si la hubiera
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
 
     const timer = setTimeout(() => {
       if (!isMounted.current) return;
-      setShowStartingBanner(false);
-      // Solo decidimos qué fase viene — play() lo maneja el effect de fase
-      if (blobUrl) {
-        setPhase('playing');
-      } else if (isPreloading) {
+      const hlsReady = currentRace?.video?.hlsReady;
+      const archivo  = currentRace?.video?.archivo;
+      if (hlsReady && archivo) {
         setPhase('loading');
       } else {
         setPhase('fallback');
@@ -55,31 +58,57 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
     return () => clearTimeout(timer);
   }, [currentRace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 2. Cuando llega el blob mientras esperamos (loading) ───────────────────
+  // ── Iniciar HLS cuando phase pasa a 'loading' ──────────────────────────────
   useEffect(() => {
-    if (phase !== 'loading' || !blobUrl) return;
-    setPhase('playing'); // play() se llama en el effect de abajo
-  }, [blobUrl, phase]);
+    if (phase !== 'loading') return;
 
-  // ── 3. Si la descarga falla durante loading ────────────────────────────────
-  useEffect(() => {
-    if (phase === 'loading' && !isPreloading && !blobUrl) {
+    const archivo = currentRace?.video?.archivo;
+    if (!archivo) { setPhase('fallback'); return; }
+
+    const hlsUrl = api.getHlsUrl(archivo);
+    const video  = videoRef.current;
+    if (!video) { setPhase('fallback'); return; }
+
+    const onPlay = () => { if (isMounted.current) setPhase('playing'); };
+    const onError = () => { if (isMounted.current) setPhase('fallback'); };
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        maxBufferLength: 60,
+        xhrSetup: (xhr: XMLHttpRequest) => {
+          const token = api.getToken();
+          if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        },
+      });
+      hlsRef.current = hls;
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play()
+          .then(onPlay)
+          .catch(onError);
+      });
+
+      hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+        if (data.fatal && isMounted.current) {
+          setPhase('fallback');
+          hls.destroy();
+          hlsRef.current = null;
+        }
+      });
+
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari: HLS nativo
+      video.src = hlsUrl;
+      video.play().then(onPlay).catch(onError);
+    } else {
       setPhase('fallback');
     }
-  }, [isPreloading, blobUrl, phase]);
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 4. Llamar play() DESPUÉS del render en que el <video> aparece ──────────
-  // Este effect corre tras el commit del DOM, así videoRef.current ya está seteado.
-  useEffect(() => {
-    if (phase !== 'playing' || !blobUrl) return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.play().catch(() => {
-      if (isMounted.current) setPhase('fallback');
-    });
-  }, [phase, blobUrl]);
-
-  // ── 5. Countdown del fallback ──────────────────────────────────────────────
+  // ── Countdown fallback ─────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'fallback') return;
     const id = setInterval(() => {
@@ -91,10 +120,9 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
     return () => clearInterval(id);
   }, [phase, onVideoEnded]);
 
-  const progress =
-    phase === 'fallback'
-      ? (duration - fallbackCountdown) / duration
-      : duration > 0 ? currentTime / duration : 0;
+  const progress = phase === 'fallback'
+    ? (duration - fallbackCountdown) / duration
+    : duration > 0 ? currentTime / duration : 0;
 
   const fmt = (s: number) => {
     const t = Math.max(0, Math.floor(s));
@@ -104,8 +132,24 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
   return (
     <div className="flex-1 flex flex-col justify-between p-6 relative bg-black overflow-hidden select-none w-full h-full z-10">
 
+      {/* VIDEO — siempre en el DOM para que el ref esté disponible */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        style={{ visibility: phase === 'playing' ? 'visible' : 'hidden' }}
+        muted
+        playsInline
+        onTimeUpdate={() => {
+          if (videoRef.current) {
+            setCurrentTime(videoRef.current.currentTime);
+            if (videoRef.current.duration) setDuration(videoRef.current.duration);
+          }
+        }}
+        onEnded={onVideoEnded}
+      />
+
       {/* STARTING BANNER */}
-      {showStartingBanner && (
+      {phase === 'banner' && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 animate-fade-in">
           <div
             className="text-center p-10 rounded-3xl shadow-gold-glow animate-scale-up glass-panel"
@@ -126,29 +170,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
         </div>
       )}
 
-      {/* VIDEO — siempre en el DOM cuando hay blobUrl, para que el effect
-          de play() tenga acceso al ref tras el render */}
-      {blobUrl && (
-        <video
-          ref={videoRef}
-          key={blobUrl}
-          src={blobUrl}
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          style={{ visibility: phase === 'playing' ? 'visible' : 'hidden' }}
-          muted
-          playsInline
-          onTimeUpdate={() => {
-            if (videoRef.current) {
-              setCurrentTime(videoRef.current.currentTime);
-              if (videoRef.current.duration) setDuration(videoRef.current.duration);
-            }
-          }}
-          onEnded={onVideoEnded}
-          onError={() => { if (isMounted.current && phase === 'playing') setPhase('fallback'); }}
-        />
-      )}
-
-      {/* CARGANDO TRANSMISIÓN */}
+      {/* CARGANDO HLS */}
       {phase === 'loading' && (
         <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-10">
           <div
@@ -166,7 +188,7 @@ export const VideoRace: React.FC<VideoRaceProps> = ({
         </div>
       )}
 
-      {/* FALLBACK DE CONTINGENCIA */}
+      {/* FALLBACK */}
       {phase === 'fallback' && (
         <div className="absolute inset-0 bg-gradient-to-tr from-black via-pos-gray/80 to-black z-0 flex flex-col items-center justify-center p-12 overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(245,197,24,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(245,197,24,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none opacity-40" />

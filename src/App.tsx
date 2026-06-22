@@ -155,12 +155,14 @@ function App() {
         api.getGameStatus().catch(() => null),
       ]);
 
-      setCurrentRace(race);
-      setRaceHistory(history);
-
       if (gameStatus) {
         setJackpotAmount(Number(gameStatus.jackpotAmount ?? 0));
+        // x2Dog viene en el top-level del status, no dentro del objeto race
+        if (race) race.x2Dog = gameStatus.x2Dog ?? 0;
       }
+
+      setCurrentRace(race);
+      setRaceHistory(history);
 
       setError(null);
     } catch (err: any) {

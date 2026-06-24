@@ -59,74 +59,70 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
   }, [currentRace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Iniciar HLS cuando phase pasa a 'loading' ──────────────────────────────
-  const retriedOnline = useRef(false);
-
   useEffect(() => {
     if (phase !== 'loading') return;
 
     const archivo = currentRace?.video?.archivo;
     if (!archivo) { setPhase('fallback'); return; }
 
-    // Si el local ya falló, usar online directamente; si no, usar URL normal
-    const hlsUrl = retriedOnline.current
-      ? api.getOnlineHlsUrl(archivo)
-      : api.getHlsUrl(archivo);
-
     const video = videoRef.current;
     if (!video) { setPhase('fallback'); return; }
 
-    const onPlay = () => { if (isMounted.current) setPhase('playing'); };
+    // URLs a intentar en orden: local primero (si aplica), luego online
+    const urls = api.isUsingLocalVideo()
+      ? [api.getHlsUrl(archivo), api.getOnlineHlsUrl(archivo)]
+      : [api.getHlsUrl(archivo)];
 
-    // Si falla: si estábamos en local, reintenta con online; si ya era online, contingencia
-    const onError = () => {
+    let urlIndex = 0;
+
+    const tryNext = () => {
       if (!isMounted.current) return;
-      if (!retriedOnline.current && api.isUsingLocalVideo()) {
-        retriedOnline.current = true;
-        hlsRef.current?.destroy();
-        hlsRef.current = null;
-        setPhase('loading'); // re-dispara el efecto con URL online
+      if (urlIndex >= urls.length) { setPhase('fallback'); return; }
+
+      const hlsUrl = urls[urlIndex++];
+
+      // Destruir instancia anterior si existe
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          maxBufferLength: 60,
+          xhrSetup: (xhr: XMLHttpRequest) => {
+            const token = api.getToken();
+            if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          },
+        });
+        hlsRef.current = hls;
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play()
+            .then(() => { if (isMounted.current) setPhase('playing'); })
+            .catch(tryNext);
+        });
+
+        hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+          if (data.fatal && isMounted.current) {
+            hls.destroy();
+            hlsRef.current = null;
+            tryNext();
+          }
+        });
+
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(video);
+
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = hlsUrl;
+        video.play()
+          .then(() => { if (isMounted.current) setPhase('playing'); })
+          .catch(tryNext);
       } else {
         setPhase('fallback');
       }
     };
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        maxBufferLength: 60,
-        xhrSetup: (xhr: XMLHttpRequest) => {
-          const token = api.getToken();
-          if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        },
-      });
-      hlsRef.current = hls;
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().then(onPlay).catch(onError);
-      });
-
-      hls.on(Hls.Events.ERROR, (_: any, data: any) => {
-        if (data.fatal && isMounted.current) {
-          hls.destroy();
-          hlsRef.current = null;
-          onError();
-        }
-      });
-
-      hls.loadSource(hlsUrl);
-      hls.attachMedia(video);
-
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = hlsUrl;
-      video.play().then(onPlay).catch(onError);
-    } else {
-      setPhase('fallback');
-    }
+    tryNext();
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Reset del retry al cambiar de carrera
-  useEffect(() => {
-    retriedOnline.current = false;
-  }, [currentRace?.id]);
 
   // ── Countdown fallback ─────────────────────────────────────────────────────
   useEffect(() => {

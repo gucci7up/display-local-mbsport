@@ -10,9 +10,20 @@ class ApiService {
   private client: AxiosInstance;
   private token: string | null = null;
   private isAuthenticating: Promise<string> | null = null;
-  private displayAgencyId: string | null = localStorage.getItem(AGENCY_STORAGE_KEY);
+  private displayAgencyId: string | null = null;
 
   constructor() {
+    // URL param tiene prioridad sobre localStorage
+    // Así ?agencyId= siempre funciona (desde Flutter app o browser directo)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlAgencyId = urlParams.get('agencyId');
+    if (urlAgencyId) {
+      this.displayAgencyId = urlAgencyId;
+      localStorage.setItem(AGENCY_STORAGE_KEY, urlAgencyId);
+    } else {
+      this.displayAgencyId = localStorage.getItem(AGENCY_STORAGE_KEY);
+    }
+
     this.client = axios.create({
       baseURL: API_URL,
       timeout: 8000,

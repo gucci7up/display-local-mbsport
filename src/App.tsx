@@ -16,9 +16,17 @@ import { socket } from './services/socket';
 type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'VIDEO' | 'RESULTS';
 
 function App() {
-  const [unlocked, setUnlocked] = useState<boolean>(() => isDisplayUnlocked());
+  const [unlocked, setUnlocked] = useState<boolean>(() => {
+    // Si viene ?agencyId= en la URL, consideramos el display desbloqueado automáticamente
+    const urlAgencyId = new URLSearchParams(window.location.search).get('agencyId');
+    if (urlAgencyId) return true;
+    return isDisplayUnlocked();
+  });
   const [agencyConfigured, setAgencyConfigured] = useState<boolean>(
-    () => api.getDisplayAgencyId() !== null,
+    () => {
+      const urlAgencyId = new URLSearchParams(window.location.search).get('agencyId');
+      return urlAgencyId !== null || api.getDisplayAgencyId() !== null;
+    },
   );
 
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('LOBBY');

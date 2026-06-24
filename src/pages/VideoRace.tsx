@@ -59,18 +59,36 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
   }, [currentRace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Iniciar HLS cuando phase pasa a 'loading' ──────────────────────────────
+  const retriedOnline = useRef(false);
+
   useEffect(() => {
     if (phase !== 'loading') return;
 
     const archivo = currentRace?.video?.archivo;
     if (!archivo) { setPhase('fallback'); return; }
 
-    const hlsUrl = api.getHlsUrl(archivo);
-    const video  = videoRef.current;
+    // Si el local ya falló, usar online directamente; si no, usar URL normal
+    const hlsUrl = retriedOnline.current
+      ? api.getOnlineHlsUrl(archivo)
+      : api.getHlsUrl(archivo);
+
+    const video = videoRef.current;
     if (!video) { setPhase('fallback'); return; }
 
     const onPlay = () => { if (isMounted.current) setPhase('playing'); };
-    const onError = () => { if (isMounted.current) setPhase('fallback'); };
+
+    // Si falla: si estábamos en local, reintenta con online; si ya era online, contingencia
+    const onError = () => {
+      if (!isMounted.current) return;
+      if (!retriedOnline.current && api.isUsingLocalVideo()) {
+        retriedOnline.current = true;
+        hlsRef.current?.destroy();
+        hlsRef.current = null;
+        setPhase('loading'); // re-dispara el efecto con URL online
+      } else {
+        setPhase('fallback');
+      }
+    };
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -83,16 +101,14 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
       hlsRef.current = hls;
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play()
-          .then(onPlay)
-          .catch(onError);
+        video.play().then(onPlay).catch(onError);
       });
 
       hls.on(Hls.Events.ERROR, (_: any, data: any) => {
         if (data.fatal && isMounted.current) {
-          setPhase('fallback');
           hls.destroy();
           hlsRef.current = null;
+          onError();
         }
       });
 
@@ -100,13 +116,17 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
       hls.attachMedia(video);
 
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari: HLS nativo
       video.src = hlsUrl;
       video.play().then(onPlay).catch(onError);
     } else {
       setPhase('fallback');
     }
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset del retry al cambiar de carrera
+  useEffect(() => {
+    retriedOnline.current = false;
+  }, [currentRace?.id]);
 
   // ── Countdown fallback ─────────────────────────────────────────────────────
   useEffect(() => {

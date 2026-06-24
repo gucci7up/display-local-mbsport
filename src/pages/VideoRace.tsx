@@ -86,7 +86,19 @@ export const VideoRace: React.FC<VideoRaceProps> = ({ currentRace, onVideoEnded 
 
       if (Hls.isSupported()) {
         const hls = new Hls({
-          maxBufferLength: 60,
+          // ABR: empieza en calidad baja y sube automáticamente
+          startLevel: -1,                  // auto selección de calidad inicial
+          abrEwmaDefaultEstimate: 200000,  // asume 200kbps al arrancar (conservador)
+          abrBandWidthFactor: 0.9,         // usa 90% del ancho de banda estimado
+          abrBandWidthUpFactor: 0.7,       // sube de calidad con cautela
+          // Buffer: acumula más antes de reproducir para evitar congelados
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 30 * 1000 * 1000, // 30 MB
+          maxBufferHole: 0.5,
+          // Segmentos: usa workers para decodificar más rápido
+          enableWorker: true,
+          lowLatencyMode: false,
           xhrSetup: (xhr: XMLHttpRequest) => {
             const token = api.getToken();
             if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);

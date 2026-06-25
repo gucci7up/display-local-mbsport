@@ -7,6 +7,7 @@ import { Lobby } from './pages/Lobby';
 import { DogsPresentation } from './pages/DogsPresentation';
 import { ExactaMatrix } from './pages/ExactaMatrix';
 import { OfficialResults } from './pages/OfficialResults';
+import { ResultsModal } from './components/ResultsModal';
 import { VideoRace } from './pages/VideoRace';
 import { RaceStartingScreen } from './pages/RaceStartingScreen';
 import { LoginScreen, isDisplayUnlocked, lockDisplay } from './pages/LoginScreen';
@@ -99,6 +100,7 @@ function App() {
   // Resultados de la pantalla final: carrera que acaba de terminar (independiente de currentRace)
   const [finishedRaceResults, setFinishedRaceResults] = useState<any>(null);
   const [finishedRaceNumber, setFinishedRaceNumber] = useState<any>(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
   // Ref que captura la carrera que está en VIDEO para que handleVideoEnded la use aunque currentRace ya cambió
   const videoRaceRef = useRef<any>(null);
 
@@ -132,7 +134,7 @@ function App() {
 
   // Prevent infinite video looping or results looping in autoMode
   const [playedVideoRaceId, setPlayedVideoRaceId] = useState<string | null>(null);
-  const [shownResultsRaceId, setShownResultsRaceId] = useState<string | null>(null);
+  const [shownResultsRaceId] = useState<string | null>(null);
 
   // Capturar la carrera cuando arranca el video (antes de que currentRace cambie a la siguiente)
   useEffect(() => {
@@ -149,28 +151,29 @@ function App() {
     setPlayedVideoRaceId(raceId || null);
     setFinishedRaceResults(null);
     setFinishedRaceNumber(finishedRace?.numero ?? null);
+    setShowResultsModal(false);
 
-    if (!raceId) { setCurrentScreen('RESULTS'); return; }
+    if (!raceId) return;
 
-    // Esperar 2s para que el backend liquide la carrera antes de mostrar resultados
+    // Esperar 1.5s para que el backend liquide la carrera, luego mostrar modal
     const tryFetch = (attempt: number) => {
       api.getRaceResults(raceId)
         .then(results => {
           if (results) {
             setFinishedRaceResults(results);
-            setCurrentScreen('RESULTS'); // mostrar SOLO cuando tengamos datos reales
+            setShowResultsModal(true); // mostrar modal SOLO con datos reales del backend
           } else if (attempt < 8) {
             setTimeout(() => tryFetch(attempt + 1), 2000);
           } else {
-            setCurrentScreen('RESULTS'); // timeout — mostrar igual
+            setShowResultsModal(true); // timeout — mostrar modal igualmente
           }
         })
         .catch(() => {
           if (attempt < 8) setTimeout(() => tryFetch(attempt + 1), 2000);
-          else setCurrentScreen('RESULTS');
+          else setShowResultsModal(true);
         });
     };
-    setTimeout(() => tryFetch(0), 1500); // primer intento tras 1.5s
+    setTimeout(() => tryFetch(0), 1500);
   };
 
   // Contador de fallos consecutivos (ref para no causar re-renders)
@@ -378,26 +381,7 @@ function App() {
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
   }, [showStartingOverlay]);
 
-  // 4. Timer de 15s para salir de RESULTS — usa ref para no cancelarse con cambios de carrera
-  const resultsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (currentScreen === 'RESULTS' && autoMode) {
-      // Solo iniciar si no hay ya un timer corriendo
-      if (!resultsTimerRef.current) {
-        resultsTimerRef.current = setTimeout(() => {
-          resultsTimerRef.current = null;
-          if (currentRace) setShownResultsRaceId(currentRace.id);
-          setCurrentScreen('LOBBY');
-        }, 15000);
-      }
-    } else {
-      // Si salimos de RESULTS por cualquier razón, cancelar el timer
-      if (resultsTimerRef.current) {
-        clearTimeout(resultsTimerRef.current);
-        resultsTimerRef.current = null;
-      }
-    }
-  }, [currentScreen, autoMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  // El timer de resultados ahora está dentro del componente ResultsModal
 
   // Toggle Auto Mode
   const toggleAutoMode = () => {
@@ -581,6 +565,16 @@ function App() {
       {/* VIDEO — full screen fuera del layout */}
       {currentScreen === 'VIDEO' && (
         <VideoRace currentRace={currentRace} onVideoEnded={handleVideoEnded} />
+      )}
+
+      {/* MODAL DE RESULTADOS — superpuesto, 15s, no interrumpe la pantalla de fondo */}
+      {showResultsModal && (
+        <ResultsModal
+          raceNumber={finishedRaceNumber ?? currentRace?.numero ?? '---'}
+          resultsData={finishedRaceResults}
+          liveOdds={liveOdds}
+          onClose={() => setShowResultsModal(false)}
+        />
       )}
 
       {/* JACKPOT WIN ANIMATION OVERLAY */}

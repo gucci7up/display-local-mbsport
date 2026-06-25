@@ -189,9 +189,9 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
         {/* Columna derecha: GANADOR / EXACTA / TRIFECTA */}
         <div className="flex flex-col gap-3 shrink-0" style={{ width: 240 }}>
           {[
-            { label: 'GANADOR',  val: String(firstId),                        odds: winOdds      },
-            { label: 'EXACTA',   val: `${firstId} – ${secondId}`,             odds: exactaOdds   },
-            { label: 'TRIFECTA', val: `${firstId} – ${secondId} – ${thirdId}`,odds: trifectaOdds },
+            { label: 'QUINIELA', val: String(firstId),                        odds: winOdds      },
+            { label: 'PALE',     val: `${firstId} – ${secondId}`,             odds: exactaOdds   },
+            { label: 'TRIPLETA', val: `${firstId} – ${secondId} – ${thirdId}`,odds: trifectaOdds },
           ].map((item, i) => (
             <div
               key={i}
@@ -207,7 +207,7 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
                 {item.label}
               </span>
               <div className="gold-divider my-1.5" style={{ width: '70%' }} />
-              <span className="font-display font-black text-white font-mono tracking-wider" style={{ fontSize: item.label === 'TRIFECTA' ? 20 : 28 }}>
+              <span className="font-display font-black text-white font-mono tracking-wider" style={{ fontSize: item.label === 'TRIPLETA' ? 20 : 28 }}>
                 {item.val}
               </span>
               <span className="font-display font-extrabold text-gradient-gold" style={{ fontSize: 22, marginTop: 2 }}>

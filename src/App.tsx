@@ -158,7 +158,7 @@ function App() {
   const fetchData = async () => {
     try {
       const [race, history, gameStatus] = await Promise.all([
-        api.getCurrentRace().catch(() => null),
+        api.getCurrentRace(),
         api.getRaceHistory(8).catch(() => []),
         api.getGameStatus().catch(() => null),
       ]);

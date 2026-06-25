@@ -155,25 +155,30 @@ function App() {
 
     if (!raceId) return;
 
-    // Esperar 1.5s para que el backend liquide la carrera, luego mostrar modal
+    // Esperar que el backend tenga el resultado real (carrera liquidada)
+    // Verificar que winners tenga datos antes de mostrar el modal
     const tryFetch = (attempt: number) => {
       api.getRaceResults(raceId)
         .then(results => {
-          if (results) {
+          const hasRealData = results?.winners?.trifecta || results?.winners?.exacta || results?.winners?.winner || results?.resultado;
+          if (hasRealData) {
             setFinishedRaceResults(results);
-            setShowResultsModal(true); // mostrar modal SOLO con datos reales del backend
-          } else if (attempt < 8) {
-            setTimeout(() => tryFetch(attempt + 1), 2000);
+            setShowResultsModal(true);
+          } else if (attempt < 10) {
+            // Backend aún no liquidó — reintentar cada 1.5s
+            setTimeout(() => tryFetch(attempt + 1), 1500);
           } else {
-            setShowResultsModal(true); // timeout — mostrar modal igualmente
+            // Máximo 10 intentos — mostrar igualmente
+            if (results) setFinishedRaceResults(results);
+            setShowResultsModal(true);
           }
         })
         .catch(() => {
-          if (attempt < 8) setTimeout(() => tryFetch(attempt + 1), 2000);
+          if (attempt < 10) setTimeout(() => tryFetch(attempt + 1), 1500);
           else setShowResultsModal(true);
         });
     };
-    setTimeout(() => tryFetch(0), 1500);
+    setTimeout(() => tryFetch(0), 2000); // 2s iniciales para que la carrera se liquide
   };
 
   // Contador de fallos consecutivos (ref para no causar re-renders)

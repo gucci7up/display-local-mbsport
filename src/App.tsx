@@ -269,11 +269,11 @@ function App() {
     const status = currentRace.status ? currentRace.status.toUpperCase() : 'OPEN';
 
     if (status === 'OPEN' || (status === 'FINISHED' && shownResultsRaceId === currentRace.id)) {
-      // Rotar LOBBY/DOGS/ODDS solo cuando está OPEN
-      const rotate = () => {
-        openScreenIndexRef.current = (openScreenIndexRef.current + 1) % openScreens.length;
-        const nextScreen = openScreens[openScreenIndexRef.current];
-        setCurrentScreen(nextScreen);
+      // Tiempos por pantalla: ODDS = 30s protagonista, LOBBY/DOGS = 5s
+      const screenDuration: Record<string, number> = {
+        LOBBY: 5000,
+        DOGS:  5000,
+        ODDS:  30000,
       };
 
       if (!openScreens.includes(currentScreen)) {
@@ -281,7 +281,18 @@ function App() {
         setCurrentScreen('LOBBY');
       }
 
-      rotationTimerRef.current = setInterval(rotate, 12000) as unknown as number;
+      // setTimeout encadenado — cada pantalla espera su propio tiempo
+      const scheduleNext = (screen: string) => {
+        const delay = screenDuration[screen] ?? 5000;
+        rotationTimerRef.current = setTimeout(() => {
+          openScreenIndexRef.current = (openScreenIndexRef.current + 1) % openScreens.length;
+          const nextScreen = openScreens[openScreenIndexRef.current];
+          setCurrentScreen(nextScreen);
+          scheduleNext(nextScreen);
+        }, delay) as unknown as number;
+      };
+
+      scheduleNext(currentScreen);
     } else if (status === 'CLOSED') {
       // Imagen "Ya va a comenzar" full screen
       setCurrentScreen('RACE_STARTING');
@@ -300,7 +311,7 @@ function App() {
 
     return () => {
       if (rotationTimerRef.current) {
-        clearInterval(rotationTimerRef.current);
+        clearTimeout(rotationTimerRef.current);
       }
     };
   }, [autoMode, currentRace?.id, currentRace?.status, playedVideoRaceId, shownResultsRaceId]);

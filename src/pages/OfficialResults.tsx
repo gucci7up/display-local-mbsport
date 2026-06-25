@@ -12,14 +12,11 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
   resultsData,
   liveOdds = [],
 }) => {
-  // Countdown próxima carrera
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(15);
   useEffect(() => {
     const t = setInterval(() => setCountdown(p => Math.max(0, p - 1)), 1000);
     return () => clearInterval(t);
   }, []);
-  const fmtCd = (s: number) =>
-    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   // Resolver posiciones
   let firstId = 1, secondId = 3, thirdId = 5;
@@ -38,7 +35,6 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
     }
   }
 
-  // Cuotas
   const getOdds = (betType: string, sel: string): string => {
     const o = liveOdds.find(x => x.betType === betType && x.selection === sel);
     if (o && +o.currentOdds > 1) return (+o.currentOdds).toFixed(2);
@@ -56,27 +52,18 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
   const secondDog = DOGS_METADATA[secondId - 1] || DOGS_METADATA[2];
   const thirdDog  = DOGS_METADATA[thirdId  - 1] || DOGS_METADATA[4];
 
-  const medals = [
-    { label: '1°', bg: 'linear-gradient(135deg,#FFE9A8 0%,#F5C518 50%,#9a6e00 100%)', tc: '#1a1200', glow: 'rgba(245,197,24,0.6)',  border: '#F5C518' },
-    { label: '2°', bg: 'linear-gradient(135deg,#F2F2F2 0%,#C0C0C0 50%,#6e6e6e 100%)', tc: '#111',   glow: 'rgba(192,192,192,0.5)', border: '#C0C0C0' },
-    { label: '3°', bg: 'linear-gradient(135deg,#E3A468 0%,#CD7F32 50%,#7a4a18 100%)', tc: '#1a0800', glow: 'rgba(205,127,50,0.5)',  border: '#CD7F32' },
+  const rows = [
+    { dog: firstDog,  label: '1°', sublabel: 'PRIMER LUGAR',  medalBg: 'linear-gradient(135deg,#FFE9A8,#F5C518,#9a6e00)', medalBorder: '#F5C518', glow: 'rgba(245,197,24,0.7)',  rowAccent: firstDog.color  },
+    { dog: secondDog, label: '2°', sublabel: 'SEGUNDO LUGAR', medalBg: 'linear-gradient(135deg,#F2F2F2,#C0C0C0,#6e6e6e)', medalBorder: '#C0C0C0', glow: 'rgba(192,192,192,0.5)', rowAccent: secondDog.color },
+    { dog: thirdDog,  label: '3°', sublabel: 'TERCER LUGAR',  medalBg: 'linear-gradient(135deg,#E3A468,#CD7F32,#7a4a18)', medalBorder: '#CD7F32', glow: 'rgba(205,127,50,0.5)',  rowAccent: thirdDog.color  },
   ];
-
-  const rowBg = [
-    'linear-gradient(to right, rgba(245,197,24,0.12) 0%, rgba(0,0,0,0) 60%)',
-    'linear-gradient(to right, rgba(192,192,192,0.08) 0%, rgba(0,0,0,0) 60%)',
-    'linear-gradient(to right, rgba(205,127,50,0.10) 0%, rgba(0,0,0,0) 60%)',
-  ];
-
-  const placeLabel = ['PRIMER LUGAR', 'SEGUNDO LUGAR', 'TERCER LUGAR'];
-  const dogs = [firstDog, secondDog, thirdDog];
 
   if (!resultsData) {
     return (
       <div className="flex-1 flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-6 p-10 rounded-3xl glass-panel">
-          <div className="w-14 h-14 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" />
-          <span className="font-display font-black text-gradient-gold text-2xl tracking-widest uppercase">
+          <div className="w-16 h-16 border-4 border-pos-yellow border-t-transparent rounded-full animate-spin" />
+          <span className="font-display font-black text-gradient-gold text-3xl tracking-widest uppercase">
             Calculando Resultados...
           </span>
         </div>
@@ -85,132 +72,140 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-black select-none overflow-hidden" style={{ padding: '14px 20px 0' }}>
+    <div className="flex-1 flex flex-col bg-black select-none overflow-hidden" style={{ padding: '10px 20px 0' }}>
 
-      {/* ── Título ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-2 shrink-0">
-        <span className="font-display font-black text-white uppercase tracking-wider" style={{ fontSize: 22 }}>
-          Resultado Oficial&nbsp;
-          <span className="text-pos-yellow">•</span>
-          &nbsp;Carrera {raceNumber}
+      {/* Título */}
+      <div className="flex items-center justify-between shrink-0" style={{ marginBottom: 8 }}>
+        <span className="font-display font-black text-white uppercase" style={{ fontSize: 26, letterSpacing: '0.05em' }}>
+          RESULTADO OFICIAL&nbsp;<span style={{ color: '#F5C518' }}>•</span>&nbsp;CARRERA {raceNumber}
         </span>
-        <span className="flex items-center gap-2 font-display font-black text-green-400 uppercase tracking-widest" style={{ fontSize: 16 }}>
-          Finalizada
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="9" fill="#22c55e" opacity="0.2" stroke="#22c55e" strokeWidth="1.5"/>
-            <path d="M5.5 10l3 3 6-6" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <span className="flex items-center gap-2 font-display font-black uppercase" style={{ fontSize: 18, color: '#22c55e', letterSpacing: '0.1em' }}>
+          FINALIZADA
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="10" fill="#22c55e" opacity="0.2" stroke="#22c55e" strokeWidth="2"/>
+            <path d="M6 11l3.5 3.5 6.5-7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
       </div>
-      <div className="gold-divider mb-3 shrink-0" />
+      <div className="gold-divider shrink-0" style={{ marginBottom: 8 }} />
 
-      {/* ── Contenido principal ───────────────────────────────────────────── */}
+      {/* 3 filas + panel derecho */}
       <div className="flex gap-4 overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
 
-        {/* Columna izquierda: 3 filas de resultado */}
+        {/* Filas de resultado */}
         <div className="flex flex-col gap-3" style={{ flex: 1 }}>
-          {dogs.map((dog, idx) => (
+          {rows.map((row, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-4 rounded-2xl border relative overflow-hidden"
+              className="relative overflow-hidden rounded-2xl"
               style={{
                 flex: 1,
-                background: rowBg[idx],
-                borderColor: medals[idx].border + '55',
-                boxShadow: `0 0 24px ${medals[idx].glow}, inset 0 0 12px ${medals[idx].glow}40`,
-                padding: '0 16px',
+                border: `1.5px solid ${row.medalBorder}44`,
+                boxShadow: `0 0 30px ${row.glow}50`,
+                background: `linear-gradient(to right, ${row.rowAccent && !row.dog.isStripes ? row.rowAccent + '18' : 'rgba(255,255,255,0.04)'} 0%, rgba(0,0,0,0.6) 55%)`,
               }}
             >
-              {/* Medallón */}
-              <div
-                className="flex items-center justify-center font-display font-black shrink-0 rounded-full shadow-lg"
-                style={{
-                  width: 80, height: 80,
-                  background: medals[idx].bg,
-                  color: medals[idx].tc,
-                  fontSize: 30,
-                  boxShadow: `0 0 24px ${medals[idx].glow}`,
-                  border: `3px solid ${medals[idx].border}`,
-                }}
-              >
-                {medals[idx].label}
+              {/* Contenido izquierdo */}
+              <div className="flex items-center h-full" style={{ padding: '0 20px', gap: 20, position: 'relative', zIndex: 2 }}>
+
+                {/* Medallón grande */}
+                <div
+                  className="shrink-0 flex items-center justify-center font-display font-black rounded-full"
+                  style={{
+                    width: 90, height: 90,
+                    background: row.medalBg,
+                    color: idx === 1 ? '#1a1a1a' : '#1a1100',
+                    fontSize: 32,
+                    boxShadow: `0 0 28px ${row.glow}`,
+                    border: `3px solid ${row.medalBorder}`,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {row.label}
+                </div>
+
+                {/* Número del perro */}
+                <div
+                  className="shrink-0 flex items-center justify-center font-display font-black rounded-xl"
+                  style={{
+                    width: 72, height: 72,
+                    background: row.dog.isStripes
+                      ? 'repeating-linear-gradient(45deg,#111 0,#111 7px,#fff 7px,#fff 14px)'
+                      : row.dog.color,
+                    color: row.dog.textColor,
+                    fontSize: 38,
+                    border: '2px solid rgba(0,0,0,0.4)',
+                    boxShadow: row.dog.isStripes ? 'none' : `0 0 20px ${row.dog.color}88`,
+                  }}
+                >
+                  {row.dog.id}
+                </div>
+
+                {/* Nombre */}
+                <div className="flex flex-col">
+                  <span className="font-display font-black text-white uppercase" style={{ fontSize: 44, lineHeight: 1, letterSpacing: '-0.01em' }}>
+                    {row.dog.name}
+                  </span>
+                  <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 14, marginTop: 4 }}>
+                    {row.sublabel}
+                  </span>
+                </div>
               </div>
 
-              {/* Badge número perro */}
+              {/* Imagen del perro — GRANDE, lado derecho */}
               <div
-                className="flex items-center justify-center font-display font-black rounded-xl shrink-0"
-                style={{
-                  width: 64, height: 64,
-                  background: dog.isStripes
-                    ? 'repeating-linear-gradient(45deg,#111 0,#111 6px,#fff 6px,#fff 12px)'
-                    : dog.color,
-                  color: dog.textColor,
-                  fontSize: 34,
-                  border: '2px solid rgba(0,0,0,0.4)',
-                  boxShadow: dog.isStripes ? 'none' : `0 0 18px ${dog.color}88`,
-                }}
+                className="absolute top-0 right-0 bottom-0 overflow-hidden pointer-events-none"
+                style={{ width: '42%', zIndex: 1 }}
               >
-                {dog.id}
-              </div>
-
-              {/* Nombre */}
-              <div className="flex flex-col justify-center" style={{ flex: 1 }}>
-                <span className="font-display font-black text-white uppercase leading-none tracking-wide" style={{ fontSize: 36 }}>
-                  {dog.name}
-                </span>
-                <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 13, marginTop: 6 }}>
-                  {placeLabel[idx]}
-                </span>
-              </div>
-
-              {/* Imagen del perro — grande, ocupa el lado derecho */}
-              <div
-                className="absolute right-0 top-0 bottom-0 overflow-hidden pointer-events-none"
-                style={{ width: '45%' }}
-              >
-                {/* Fondo de color del perro */}
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `linear-gradient(to left, ${dog.isStripes ? 'rgba(220,220,220,0.18)' : dog.color + '45'} 0%, ${dog.isStripes ? 'rgba(220,220,220,0.05)' : dog.color + '15'} 50%, transparent 100%)`,
+                    background: row.dog.isStripes
+                      ? 'linear-gradient(to left, rgba(200,200,200,0.12) 0%, transparent 70%)'
+                      : `linear-gradient(to left, ${row.dog.color}55 0%, ${row.dog.color}22 40%, transparent 80%)`,
                   }}
                 />
                 <img
-                  src={dog.image}
-                  alt={dog.name}
-                  className="absolute bottom-0 right-0 object-contain drop-shadow-2xl"
-                  style={{ height: '115%', maxWidth: '100%', objectPosition: 'right bottom' }}
+                  src={row.dog.image}
+                  alt={row.dog.name}
+                  className="absolute drop-shadow-2xl"
+                  style={{
+                    height: '120%',
+                    width: 'auto',
+                    bottom: '-10%',
+                    right: '0',
+                    objectFit: 'contain',
+                  }}
                 />
               </div>
             </div>
           ))}
         </div>
 
-        {/* Columna derecha: GANADOR / EXACTA / TRIFECTA */}
-        <div className="flex flex-col gap-3 shrink-0" style={{ width: 240 }}>
+        {/* Panel derecho: cuotas */}
+        <div className="flex flex-col gap-3 shrink-0" style={{ width: 220 }}>
           {[
-            { label: 'QUINIELA', val: String(firstId),                        odds: winOdds      },
-            { label: 'PALE',     val: `${firstId} – ${secondId}`,             odds: exactaOdds   },
-            { label: 'TRIPLETA', val: `${firstId} – ${secondId} – ${thirdId}`,odds: trifectaOdds },
+            { label: 'GANADOR',  combo: String(firstId),                         odds: winOdds      },
+            { label: 'EXACTA',   combo: `${firstId} – ${secondId}`,              odds: exactaOdds   },
+            { label: 'TRIFECTA', combo: `${firstId} – ${secondId} – ${thirdId}`, odds: trifectaOdds },
           ].map((item, i) => (
             <div
               key={i}
-              className="flex-1 flex flex-col justify-center items-center rounded-2xl text-center glass-panel"
+              className="flex-1 flex flex-col justify-center items-center text-center glass-panel rounded-2xl"
               style={{
-                borderColor: 'rgba(245,197,24,0.35)',
-                boxShadow: '0 0 20px rgba(245,197,24,0.2), inset 0 0 10px rgba(245,197,24,0.04)',
+                borderColor: 'rgba(245,197,24,0.4)',
+                boxShadow: '0 0 20px rgba(245,197,24,0.15)',
                 padding: '10px 8px',
-                animationDelay: `${0.6 + i * 0.2}s`,
               }}
             >
-              <span className="font-display font-black tracking-widest uppercase text-gray-500" style={{ fontSize: 11, letterSpacing: '0.15em' }}>
+              <span className="font-display font-black tracking-widest uppercase text-gray-400" style={{ fontSize: 12, letterSpacing: '0.15em' }}>
                 {item.label}
               </span>
-              <div className="gold-divider my-1.5" style={{ width: '70%' }} />
-              <span className="font-display font-black text-white font-mono tracking-wider" style={{ fontSize: item.label === 'TRIPLETA' ? 20 : 28 }}>
-                {item.val}
+              <div className="gold-divider my-2" style={{ width: '80%' }} />
+              <span className="font-display font-black text-white font-mono" style={{ fontSize: item.label === 'TRIFECTA' ? 22 : 32, letterSpacing: '0.05em' }}>
+                {item.combo}
               </span>
-              <span className="font-display font-extrabold text-gradient-gold" style={{ fontSize: 22, marginTop: 2 }}>
+              <span className="font-display font-black" style={{ fontSize: 26, marginTop: 4, color: '#F5C518' }}>
                 x{item.odds}
               </span>
             </div>
@@ -218,47 +213,41 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
         </div>
       </div>
 
-      {/* ── Barra inferior ────────────────────────────────────────────────── */}
+      {/* Barra inferior */}
       <div
         className="shrink-0 flex items-center gap-4 rounded-2xl"
         style={{
-          margin: '10px 0 6px',
+          margin: '8px 0 6px',
           padding: '10px 20px',
-          background: 'linear-gradient(to right, rgba(245,197,24,0.08), rgba(0,0,0,0.4), rgba(245,197,24,0.08))',
-          border: '1px solid rgba(245,197,24,0.2)',
+          background: 'linear-gradient(to right, rgba(245,197,24,0.1), rgba(0,0,0,0.4), rgba(245,197,24,0.1))',
+          border: '1px solid rgba(245,197,24,0.25)',
         }}
       >
-        {/* Izquierda */}
         <div className="flex items-center gap-3 shrink-0">
-          <span style={{ fontSize: 22 }}>📢</span>
+          <span style={{ fontSize: 24 }}>📢</span>
           <div>
-            <div className="font-display font-black text-white uppercase tracking-wider" style={{ fontSize: 13 }}>
+            <div className="font-display font-black text-white uppercase tracking-wider" style={{ fontSize: 14 }}>
               Sigue la Acción en Vivo
             </div>
-            <div className="font-display font-bold text-gray-500 uppercase tracking-widest" style={{ fontSize: 9 }}>
+            <div className="font-display font-bold text-gray-500 uppercase tracking-widest" style={{ fontSize: 10 }}>
               Apuestas · Emoción · Diversión
             </div>
           </div>
         </div>
-
-        {/* Centro */}
         <div className="flex-1 text-center">
-          <span className="font-display font-black text-white uppercase tracking-widest" style={{ fontSize: 15 }}>
-            La <span className="text-gradient-gold">Emoción</span> Corre Por Nuestras <span className="text-gradient-gold">Venas</span>
+          <span className="font-display font-black text-white uppercase tracking-widest" style={{ fontSize: 18 }}>
+            La <span style={{ color: '#F5C518' }}>Emoción</span> Corre Por Nuestras <span style={{ color: '#F5C518' }}>Venas</span>
           </span>
         </div>
-
-        {/* Derecha: Próxima carrera */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 11 }}>
+          <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 12 }}>
             Próxima Carrera
           </span>
-          <span className="font-mono font-black text-pos-yellow" style={{ fontSize: 20 }}>
-            ⏱ {fmtCd(countdown)}
+          <span className="font-mono font-black" style={{ fontSize: 22, color: '#F5C518' }}>
+            ⏱ {String(Math.floor(countdown / 60)).padStart(2,'0')}:{String(countdown % 60).padStart(2,'0')}
           </span>
         </div>
       </div>
-
     </div>
   );
 };

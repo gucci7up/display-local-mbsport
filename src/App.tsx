@@ -373,7 +373,7 @@ function App() {
       const timer = setTimeout(() => {
         setShownResultsRaceId(currentRace.id);
         setCurrentScreen('LOBBY');
-      }, 10000);
+      }, 15000);
       return () => clearTimeout(timer);
     }
   }, [currentScreen, currentRace?.id, currentRace?.status, autoMode, shownResultsRaceId]);

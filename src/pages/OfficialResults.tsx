@@ -125,12 +125,12 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
               <div
                 className="flex items-center justify-center font-display font-black shrink-0 rounded-full shadow-lg"
                 style={{
-                  width: 64, height: 64,
+                  width: 80, height: 80,
                   background: medals[idx].bg,
                   color: medals[idx].tc,
-                  fontSize: 26,
-                  boxShadow: `0 0 16px ${medals[idx].glow}`,
-                  border: `2px solid ${medals[idx].border}80`,
+                  fontSize: 30,
+                  boxShadow: `0 0 24px ${medals[idx].glow}`,
+                  border: `3px solid ${medals[idx].border}`,
                 }}
               >
                 {medals[idx].label}
@@ -140,14 +140,14 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
               <div
                 className="flex items-center justify-center font-display font-black rounded-xl shrink-0"
                 style={{
-                  width: 52, height: 52,
+                  width: 64, height: 64,
                   background: dog.isStripes
                     ? 'repeating-linear-gradient(45deg,#111 0,#111 6px,#fff 6px,#fff 12px)'
                     : dog.color,
                   color: dog.textColor,
-                  fontSize: 28,
+                  fontSize: 34,
                   border: '2px solid rgba(0,0,0,0.4)',
-                  boxShadow: dog.isStripes ? 'none' : `0 0 14px ${dog.color}66`,
+                  boxShadow: dog.isStripes ? 'none' : `0 0 18px ${dog.color}88`,
                 }}
               >
                 {dog.id}
@@ -155,31 +155,31 @@ export const OfficialResults: React.FC<OfficialResultsProps> = ({
 
               {/* Nombre */}
               <div className="flex flex-col justify-center" style={{ flex: 1 }}>
-                <span className="font-display font-black text-white uppercase leading-none tracking-wide" style={{ fontSize: 30 }}>
+                <span className="font-display font-black text-white uppercase leading-none tracking-wide" style={{ fontSize: 36 }}>
                   {dog.name}
                 </span>
-                <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 11, marginTop: 4 }}>
+                <span className="font-display font-bold text-gray-400 uppercase tracking-widest" style={{ fontSize: 13, marginTop: 6 }}>
                   {placeLabel[idx]}
                 </span>
               </div>
 
-              {/* Imagen del perro */}
+              {/* Imagen del perro — grande, ocupa el lado derecho */}
               <div
-                className="absolute right-0 top-0 bottom-0 flex items-center justify-end overflow-hidden pointer-events-none"
-                style={{ width: 220 }}
+                className="absolute right-0 top-0 bottom-0 overflow-hidden pointer-events-none"
+                style={{ width: '45%' }}
               >
-                {/* Gradiente de color del perro */}
+                {/* Fondo de color del perro */}
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `linear-gradient(to left, ${dog.isStripes ? 'rgba(200,200,200,0.15)' : dog.color + '30'} 0%, transparent 60%)`,
+                    background: `linear-gradient(to left, ${dog.isStripes ? 'rgba(220,220,220,0.18)' : dog.color + '45'} 0%, ${dog.isStripes ? 'rgba(220,220,220,0.05)' : dog.color + '15'} 50%, transparent 100%)`,
                   }}
                 />
                 <img
                   src={dog.image}
                   alt={dog.name}
-                  className="relative z-10 object-contain drop-shadow-xl"
-                  style={{ height: '88%', marginRight: 8 }}
+                  className="absolute bottom-0 right-0 object-contain drop-shadow-2xl"
+                  style={{ height: '115%', maxWidth: '100%', objectPosition: 'right bottom' }}
                 />
               </div>
             </div>

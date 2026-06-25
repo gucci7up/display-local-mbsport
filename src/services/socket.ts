@@ -9,17 +9,15 @@ class SocketService {
     if (this.socket) return;
 
     this.socket = io(API_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling'],  // WebSocket no está habilitado en el proxy; usar solo polling
       autoConnect: true,
+      reconnectionDelay: 5000,
+      reconnectionAttempts: 3,
     });
 
-    this.socket.on('connect', () => {
-      console.log('Socket.io connected to server:', API_URL);
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Socket.io disconnected');
-    });
+    this.socket.on('connect', () => {});
+    this.socket.on('connect_error', () => {});  // silenciar errores de conexión
+    this.socket.on('disconnect', () => {});
 
     // Mock listeners for future integration
     this.socket.on('race_status_changed', (data) => {

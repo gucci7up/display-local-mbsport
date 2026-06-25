@@ -8,12 +8,13 @@ import { DogsPresentation } from './pages/DogsPresentation';
 import { ExactaMatrix } from './pages/ExactaMatrix';
 import { OfficialResults } from './pages/OfficialResults';
 import { VideoRace } from './pages/VideoRace';
+import { RaceStartingScreen } from './pages/RaceStartingScreen';
 import { LoginScreen, isDisplayUnlocked, lockDisplay } from './pages/LoginScreen';
 import { AgencySetup } from './pages/AgencySetup';
 import { api } from './services/api';
 import { socket } from './services/socket';
 
-type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'VIDEO' | 'RESULTS';
+type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'RACE_STARTING' | 'VIDEO' | 'RESULTS';
 
 function App() {
   const [unlocked, setUnlocked] = useState<boolean>(() => {
@@ -263,21 +264,23 @@ function App() {
 
     const status = currentRace.status ? currentRace.status.toUpperCase() : 'OPEN';
 
-    if (status === 'OPEN' || status === 'CLOSED' || (status === 'FINISHED' && shownResultsRaceId === currentRace.id)) {
-      // Rotate screens every 12 seconds in OPEN or CLOSED status (or if RESULTS was already shown for 15s)
+    if (status === 'OPEN' || (status === 'FINISHED' && shownResultsRaceId === currentRace.id)) {
+      // Rotar LOBBY/DOGS/ODDS solo cuando está OPEN
       const rotate = () => {
         openScreenIndexRef.current = (openScreenIndexRef.current + 1) % openScreens.length;
         const nextScreen = openScreens[openScreenIndexRef.current];
         setCurrentScreen(nextScreen);
       };
 
-      // Set initial screen if we are not on one of the open screens
       if (!openScreens.includes(currentScreen)) {
         openScreenIndexRef.current = 0;
         setCurrentScreen('LOBBY');
       }
 
       rotationTimerRef.current = setInterval(rotate, 12000) as unknown as number;
+    } else if (status === 'CLOSED') {
+      // Imagen "Ya va a comenzar" full screen
+      setCurrentScreen('RACE_STARTING');
     } else if (status === 'RUNNING') {
       if (playedVideoRaceId !== currentRace.id) {
         setCurrentScreen('VIDEO');
@@ -356,6 +359,12 @@ function App() {
       case 'ODDS':
         screenComponent = <ExactaMatrix liveOdds={liveOdds} raceHistory={raceHistory} />;
         transitionClass = 'animate-fade-odds';
+        break;
+      case 'RACE_STARTING':
+        screenComponent = (
+          <RaceStartingScreen raceNumber={currentRace?.numero ?? '---'} />
+        );
+        transitionClass = 'animate-fade-in-lobby';
         break;
       case 'VIDEO':
         screenComponent = (

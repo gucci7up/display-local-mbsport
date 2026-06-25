@@ -298,6 +298,17 @@ function App() {
     };
   }, [autoMode, currentRace?.id, currentRace?.status, playedVideoRaceId, shownResultsRaceId]);
 
+  // 4b. Anticipar RACE_STARTING cuando el countdown llega a 0 localmente
+  useEffect(() => {
+    if (!currentRace || currentRace.status !== 'OPEN') return;
+    const endAt = currentRace.saleEndAt || currentRace.closeAt;
+    if (!endAt) return;
+    const msLeft = new Date(endAt).getTime() - Date.now();
+    if (msLeft <= 0) { setCurrentScreen('RACE_STARTING'); return; }
+    const t = setTimeout(() => setCurrentScreen('RACE_STARTING'), msLeft);
+    return () => clearTimeout(t);
+  }, [currentRace?.id, currentRace?.saleEndAt, currentRace?.closeAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 4. Timer to exit RESULTS screen after 35 seconds in autoMode
   useEffect(() => {
     if (!autoMode || !currentRace) return;
@@ -361,19 +372,9 @@ function App() {
         transitionClass = 'animate-fade-odds';
         break;
       case 'RACE_STARTING':
-        screenComponent = (
-          <RaceStartingScreen raceNumber={currentRace?.numero ?? '---'} />
-        );
-        transitionClass = 'animate-fade-in-lobby';
-        break;
       case 'VIDEO':
-        screenComponent = (
-          <VideoRace
-            currentRace={currentRace}
-            onVideoEnded={handleVideoEnded}
-          />
-        );
-        transitionClass = 'animate-cinematic-video';
+        // Estos se renderizan como overlays fuera del layout principal
+        screenComponent = null;
         break;
       case 'RESULTS':
         screenComponent = (
@@ -397,9 +398,7 @@ function App() {
     );
   };
 
-  if (!unlocked) {
-    return <LoginScreen onUnlock={() => setUnlocked(true)} />;
-  }
+  if (!unlocked) return <LoginScreen onUnlock={() => setUnlocked(true)} />;
 
   if (!agencyConfigured) {
     return (
@@ -410,7 +409,7 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden text-white relative stadium-bg">
+    <div className="h-screen w-screen flex flex-col overflow-hidden text-white relative stadium-bg" style={{ isolation: 'auto' }}>
       {/* Stadium lights breathing top-glow */}
       <div className="stadium-lights-breath" />
 
@@ -482,6 +481,16 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* RACE STARTING — full screen fuera del layout para no ser afectado por transforms */}
+      {currentScreen === 'RACE_STARTING' && currentRace && (
+        <RaceStartingScreen raceNumber={currentRace.numero ?? '---'} />
+      )}
+
+      {/* VIDEO — full screen fuera del layout */}
+      {currentScreen === 'VIDEO' && (
+        <VideoRace currentRace={currentRace} onVideoEnded={handleVideoEnded} />
+      )}
 
       {/* JACKPOT WIN ANIMATION OVERLAY */}
       {showJackpotWin && (

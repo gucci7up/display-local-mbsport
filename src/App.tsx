@@ -158,7 +158,7 @@ function App() {
   const fetchData = async () => {
     try {
       const [race, history, gameStatus] = await Promise.all([
-        api.getCurrentRace(),
+        api.getCurrentRace().catch(() => null),
         api.getRaceHistory(8).catch(() => []),
         api.getGameStatus().catch(() => null),
       ]);
@@ -434,8 +434,9 @@ function App() {
         {/* SCREEN CONTENT */}
         <div className="flex-1 flex flex-col min-h-0 relative">
           {error && (
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 bg-red-600/90 text-white font-bold px-4 py-1.5 rounded-full text-xs shadow-lg border border-red-500 animate-pulse">
-              ⚠️ {error}
+            <div className="absolute top-2 right-2 z-50 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-full border border-red-500/50">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-red-400 text-[10px] font-mono">Sin conexión</span>
             </div>
           )}
           {renderScreen()}

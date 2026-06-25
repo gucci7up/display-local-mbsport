@@ -131,11 +131,8 @@ export const ExactaMatrix: React.FC<ExactaMatrixProps> = ({ liveOdds, raceHistor
                   }}
                 >
                   {/* Número de carrera */}
-                  <div>
-                    <div style={{ color: '#6b7280', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1 }}>Carrera</div>
-                    <div style={{ color: '#D4AF37', fontFamily: 'monospace', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>
-                      #{race.numero}
-                    </div>
+                  <div style={{ color: '#D4AF37', fontFamily: 'monospace', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>
+                    #{race.numero}
                   </div>
 
                   {/* 1er, 2do, 3er */}

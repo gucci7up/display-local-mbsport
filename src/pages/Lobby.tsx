@@ -123,9 +123,8 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
             const isEven = ridx % 2 === 0;
             return (
               <div key={race.id} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 56px', alignItems: 'center', padding: '7px 8px', background: isEven ? 'rgba(255,255,255,0.03)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div>
-                  <div style={{ color: '#6b7280', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1 }}>Carrera</div>
-                  <div style={{ color: '#D4AF37', fontFamily: 'monospace', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>#{race.numero}</div>
+                <div style={{ color: '#D4AF37', fontFamily: 'monospace', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>
+                  #{race.numero}
                 </div>
                 {[0, 1, 2].map(idx => {
                   const num = parts[idx];

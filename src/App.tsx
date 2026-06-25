@@ -147,18 +147,30 @@ function App() {
     const raceId = finishedRace?.id;
 
     setPlayedVideoRaceId(raceId || null);
-    setFinishedRaceResults(null);   // limpiar mientras carga
+    setFinishedRaceResults(null);
     setFinishedRaceNumber(finishedRace?.numero ?? null);
-    setCurrentScreen('RESULTS');
 
-    if (!raceId) return;
+    if (!raceId) { setCurrentScreen('RESULTS'); return; }
+
+    // Esperar 2s para que el backend liquide la carrera antes de mostrar resultados
     const tryFetch = (attempt: number) => {
       api.getRaceResults(raceId)
-        .then(results => { if (results) setFinishedRaceResults(results); })
-        .catch(() => {});
-      if (attempt < 8) setTimeout(() => tryFetch(attempt + 1), 3000);
+        .then(results => {
+          if (results) {
+            setFinishedRaceResults(results);
+            setCurrentScreen('RESULTS'); // mostrar SOLO cuando tengamos datos reales
+          } else if (attempt < 8) {
+            setTimeout(() => tryFetch(attempt + 1), 2000);
+          } else {
+            setCurrentScreen('RESULTS'); // timeout — mostrar igual
+          }
+        })
+        .catch(() => {
+          if (attempt < 8) setTimeout(() => tryFetch(attempt + 1), 2000);
+          else setCurrentScreen('RESULTS');
+        });
     };
-    tryFetch(0);
+    setTimeout(() => tryFetch(0), 1500); // primer intento tras 1.5s
   };
 
   // Contador de fallos consecutivos (ref para no causar re-renders)
@@ -366,19 +378,26 @@ function App() {
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
   }, [showStartingOverlay]);
 
-  // 4. Timer to exit RESULTS screen after 35 seconds in autoMode
+  // 4. Timer de 15s para salir de RESULTS — usa ref para no cancelarse con cambios de carrera
+  const resultsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!autoMode || !currentRace) return;
-
-    const isPostRace = currentRace.status === 'FINISHED' || currentRace.status === 'OFFICIAL' || currentRace.status === 'RUNNING';
-    if (currentScreen === 'RESULTS' && isPostRace && shownResultsRaceId !== currentRace.id) {
-      const timer = setTimeout(() => {
-        setShownResultsRaceId(currentRace.id);
-        setCurrentScreen('LOBBY');
-      }, 15000);
-      return () => clearTimeout(timer);
+    if (currentScreen === 'RESULTS' && autoMode) {
+      // Solo iniciar si no hay ya un timer corriendo
+      if (!resultsTimerRef.current) {
+        resultsTimerRef.current = setTimeout(() => {
+          resultsTimerRef.current = null;
+          if (currentRace) setShownResultsRaceId(currentRace.id);
+          setCurrentScreen('LOBBY');
+        }, 15000);
+      }
+    } else {
+      // Si salimos de RESULTS por cualquier razón, cancelar el timer
+      if (resultsTimerRef.current) {
+        clearTimeout(resultsTimerRef.current);
+        resultsTimerRef.current = null;
+      }
     }
-  }, [currentScreen, currentRace?.id, currentRace?.status, autoMode, shownResultsRaceId]);
+  }, [currentScreen, autoMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Toggle Auto Mode
   const toggleAutoMode = () => {

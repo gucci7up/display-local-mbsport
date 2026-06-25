@@ -347,17 +347,11 @@ function App() {
       setCurrentScreen('RACE_STARTING');
     } else if (status === 'RUNNING') {
       if (playedVideoRaceId !== currentRace.id) {
-        // No interrumpir si estamos mostrando resultados de la carrera anterior
-        if (currentScreen !== 'RESULTS') {
-          setShowStartingOverlay(true);
-          setStartingOverlayFading(false);
-          setCurrentScreen('VIDEO');
-        }
-      } else {
-        setCurrentScreen('RESULTS');
+        setShowStartingOverlay(true);
+        setStartingOverlayFading(false);
+        setCurrentScreen('VIDEO');
       }
-    } else if (status === 'FINISHED' && shownResultsRaceId !== currentRace.id) {
-      setCurrentScreen('RESULTS');
+      // FINISHED → ya no cambiamos pantalla, el modal maneja los resultados
     }
 
     return () => {

@@ -6,7 +6,7 @@ interface RaceStartingScreenProps {
 
 export const RaceStartingScreen: React.FC<RaceStartingScreenProps> = ({ raceNumber }) => {
   return (
-    <div className="fixed inset-0 z-[900] bg-black">
+    <div className="fixed inset-0 z-[10000] bg-black">
       {/* Imagen full screen */}
       <img
         src="/race-starting.jpg"

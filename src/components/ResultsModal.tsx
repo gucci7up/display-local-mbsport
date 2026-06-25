@@ -73,7 +73,7 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
     /* Overlay oscuro full screen */
     <div
       className="fixed inset-0 flex items-center justify-center select-none"
-      style={{ zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+      style={{ zIndex: 9998, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
     >
       {/* Modal */}
       <div

@@ -109,6 +109,7 @@ function App() {
 
   // Jackpot state
   const [jackpotAmount, setJackpotAmount] = useState<number>(0);
+  const [trifectaBonusRate, setTrifectaBonusRate] = useState<number>(0);
   const [showJackpotWin, setShowJackpotWin] = useState<boolean>(false);
   const [jackpotWinAmount, setJackpotWinAmount] = useState<number>(0);
   const jackpotWonRaceIdRef = useRef<string | null>(null);
@@ -170,6 +171,7 @@ function App() {
 
       if (gameStatus) {
         setJackpotAmount(Number(gameStatus.jackpotAmount ?? 0));
+        setTrifectaBonusRate(Number(gameStatus.trifectaBonusRate ?? 0));
         // x2Dog viene en el top-level del status, no dentro del objeto race
         if (race) race.x2Dog = gameStatus.x2Dog ?? 0;
       }
@@ -462,6 +464,7 @@ function App() {
             debugMode={debugMode}
             isTransparent={currentScreen === 'VIDEO'}
             jackpotAmount={jackpotAmount}
+            trifectaBonusRate={trifectaBonusRate}
           />
         </div>
 

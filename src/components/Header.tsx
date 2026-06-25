@@ -11,6 +11,7 @@ interface HeaderProps {
   debugMode?: boolean;
   isTransparent?: boolean;
   jackpotAmount?: number;
+  trifectaBonusRate?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   debugMode = false,
   isTransparent = false,
   jackpotAmount = 0,
+  trifectaBonusRate = 0,
 }) => {
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -190,13 +192,23 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* JACKPOT counter — siempre visible */}
+        {/* JACKPOT counter */}
         <div style={{ ...chip('#C98A00'), minWidth: 158, borderTop: '2px solid #C98A00', animation: 'jackpot-counter-glow 2.5s ease-in-out infinite alternate' }}>
           <span style={{ ...label, color: '#B8963A', fontSize: 10 }}>💰 JACKPOT</span>
           <span style={{ fontSize: 20, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, background: 'linear-gradient(135deg,#FFE9A8,#F5C518)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             ${jackpotAmount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
+
+        {/* BONUS TRIPLETA */}
+        {trifectaBonusRate > 0 && (
+          <div style={{ ...chip('#1a6b3a'), minWidth: 130, borderTop: '2px solid #22c55e' }}>
+            <span style={{ ...label, color: '#4ade80', fontSize: 10 }}>🏆 BONUS TRIPLETA</span>
+            <span style={{ fontSize: 22, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, color: '#4ade80' }}>
+              +{Math.round(trifectaBonusRate * 100)}%
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Right: Debug controls + Clock ── */}

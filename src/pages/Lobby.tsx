@@ -101,69 +101,50 @@ export const Lobby: React.FC<LobbyProps> = ({ raceHistory, liveOdds }) => {
   return (
     <div className="flex-1 flex gap-6 p-6 overflow-hidden bg-black/40 select-none relative z-10">
       {/* Left Column: Últimos Resultados */}
-      <div className="w-[480px] flex flex-col rounded-2xl p-4 shrink-0 glass-panel">
-        <h2 className="text-gradient-gold font-display font-extrabold text-xl tracking-wider mb-3 uppercase">
+      <div className="w-[320px] flex flex-col rounded-2xl shrink-0 glass-panel overflow-hidden" style={{ padding: '16px 14px' }}>
+        <span className="text-gradient-gold font-display font-black uppercase tracking-widest" style={{ fontSize: 18, letterSpacing: '0.15em', marginBottom: 8 }}>
           Últimos Resultados
-        </h2>
-        <div className="gold-divider mb-4" />
+        </span>
+        <div className="gold-divider" style={{ marginBottom: 0 }} />
 
-        {/* Results List */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
-          {raceHistory.length === 0 ? (
-            // Mock Fallbacks
-            <>
-              {[
-                { num: '#396', dogs: ['bg-pos-blue text-white', 'bg-pos-gray border border-pos-border text-white', 'bg-white text-black'], labels: ['2','4','6'], time: '18/06 12:28 PM' },
-                { num: '#395', dogs: ['bg-pos-orange text-white', 'bg-pos-red text-white', 'bg-pos-blue text-white'], labels: ['5','1','2'], time: '18/06 12:21 PM' },
-                { num: '#394', dogs: ['bg-white text-black', 'bg-white text-black striped-badge text-stroke-black', 'bg-pos-gray border border-pos-border text-white'], labels: ['3','6','4'], time: '18/06 12:14 PM' },
-                { num: '#393', dogs: ['bg-white text-black striped-badge text-stroke-black', 'bg-pos-blue text-white', 'bg-pos-red text-white'], labels: ['6','2','1'], time: '18/06 12:07 PM' },
-                { num: '#392', dogs: ['bg-pos-red text-white', 'bg-pos-orange text-white', 'bg-white text-black'], labels: ['1','5','3'], time: '18/06 12:00 PM' },
-              ].map((row, i) => (
-                <div key={i} className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-                  <span className="text-gray-400 font-mono text-xl font-bold">{row.num}</span>
-                  <span className="flex gap-2.5">
-                    {row.dogs.map((cls, j) => (
-                      <span key={j} className={`w-9 h-9 rounded flex items-center justify-center font-bold text-base ${cls}`}>{row.labels[j]}</span>
-                    ))}
-                  </span>
-                  <span className="text-gray-500 font-mono text-sm font-semibold">{row.time}</span>
+        {/* Encabezados posición */}
+        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 56px', alignItems: 'center', padding: '6px 8px 4px', borderBottom: '1px solid rgba(212,175,55,0.3)' }}>
+          <span style={{ color: '#6b7280', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Carrera</span>
+          {['1er', '2do', '3er'].map(pos => (
+            <span key={pos} style={{ color: '#D4AF37', fontSize: 11, fontWeight: 900, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{pos}</span>
+          ))}
+          <span style={{ color: '#6b7280', fontSize: 10, fontWeight: 700, textAlign: 'right' }}>Hora</span>
+        </div>
+
+        {/* Filas */}
+        <div className="flex-1 overflow-y-auto">
+          {raceHistory.map((race, ridx) => {
+            const parts: string[] = race.resultado ? race.resultado.split('-') : [];
+            const isEven = ridx % 2 === 0;
+            return (
+              <div key={race.id} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 56px', alignItems: 'center', padding: '7px 8px', background: isEven ? 'rgba(255,255,255,0.03)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1 }}>Carrera</div>
+                  <div style={{ color: '#D4AF37', fontFamily: 'monospace', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>#{race.numero}</div>
                 </div>
-              ))}
-            </>
-          ) : (
-            raceHistory.map((race) => {
-              const resParts = race.resultado ? race.resultado.split('-') : [];
-              return (
-                <div key={race.id} className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-                  <span className="text-gray-400 font-mono text-xl font-bold">#{race.numero}</span>
-                  <span className="flex gap-2.5">
-                    {resParts.map((num: string, idx: number) => {
-                      const numInt = Number(num);
-                      const dogMeta = DOGS_METADATA[numInt - 1];
-                      if (!dogMeta) return null;
-                      return (
-                        <span
-                          key={idx}
-                          className="w-9 h-9 rounded flex items-center justify-center font-bold text-base border border-black/30 shadow-sm"
-                          style={{
-                            background: dogMeta.isStripes
-                              ? 'repeating-linear-gradient(90deg, #111 0px, #111 4px, #fff 4px, #fff 8px)'
-                              : dogMeta.color,
-                            color: dogMeta.textColor,
-                          }}
-                        >
-                          {num}
-                        </span>
-                      );
-                    })}
-                  </span>
-                  <span className="text-gray-500 font-mono text-sm font-semibold">
-                    {formatRaceDate(race.finishedAt)} {formatRaceTime(race.finishedAt)}
-                  </span>
+                {[0, 1, 2].map(idx => {
+                  const num = parts[idx];
+                  if (!num) return <div key={idx} />;
+                  const dog = DOGS_METADATA[Number(num) - 1];
+                  if (!dog) return <div key={idx} />;
+                  return (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'center' }}>
+                      <span style={{ width: 42, height: 42, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 22, background: dog.isStripes ? 'repeating-linear-gradient(90deg,#111 0,#111 5px,#fff 5px,#fff 10px)' : dog.color, color: dog.textColor, boxShadow: `0 2px 8px ${dog.isStripes ? 'rgba(255,255,255,0.1)' : dog.color + '44'}`, border: '1.5px solid rgba(0,0,0,0.2)' }}>{num}</span>
+                    </div>
+                  );
+                })}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#6b7280', fontSize: 9, fontWeight: 700 }}>{formatRaceDate(race.finishedAt)}</div>
+                  <div style={{ color: '#9ca3af', fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{formatRaceTime(race.finishedAt)}</div>
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

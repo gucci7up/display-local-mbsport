@@ -103,6 +103,10 @@ function App() {
   const videoRaceRef = useRef<any>(null);
 
 
+  // Overlay imagen "Ya va a comenzar" — se muestra encima del video durante 3s extra
+  const [showStartingOverlay, setShowStartingOverlay] = useState(false);
+  const [startingOverlayFading, setStartingOverlayFading] = useState(false);
+
   // Jackpot state
   const [jackpotAmount, setJackpotAmount] = useState<number>(0);
   const [showJackpotWin, setShowJackpotWin] = useState<boolean>(false);
@@ -283,6 +287,9 @@ function App() {
       setCurrentScreen('RACE_STARTING');
     } else if (status === 'RUNNING') {
       if (playedVideoRaceId !== currentRace.id) {
+        // Activar overlay imagen encima del video durante los primeros 3s
+        setShowStartingOverlay(true);
+        setStartingOverlayFading(false);
         setCurrentScreen('VIDEO');
       } else {
         setCurrentScreen('RESULTS');
@@ -308,6 +315,14 @@ function App() {
     const t = setTimeout(() => setCurrentScreen('RACE_STARTING'), msLeft);
     return () => clearTimeout(t);
   }, [currentRace?.id, currentRace?.saleEndAt, currentRace?.closeAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 4c. Ocultar overlay imagen con fade después de 3s cuando el video empieza
+  useEffect(() => {
+    if (!showStartingOverlay) return;
+    const fadeTimer = setTimeout(() => setStartingOverlayFading(true), 3000);
+    const hideTimer = setTimeout(() => setShowStartingOverlay(false), 3800); // 800ms fade
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+  }, [showStartingOverlay]);
 
   // 4. Timer to exit RESULTS screen after 35 seconds in autoMode
   useEffect(() => {
@@ -482,9 +497,22 @@ function App() {
         </div>
       </div>
 
-      {/* RACE STARTING — full screen fuera del layout para no ser afectado por transforms */}
+      {/* RACE STARTING — full screen al cerrar carrera */}
       {currentScreen === 'RACE_STARTING' && currentRace && (
         <RaceStartingScreen raceNumber={currentRace.numero ?? '---'} />
+      )}
+
+      {/* OVERLAY imagen encima del video durante 3s extra al arrancar */}
+      {showStartingOverlay && currentRace && (
+        <div
+          style={{
+            transition: 'opacity 0.8s ease-out',
+            opacity: startingOverlayFading ? 0 : 1,
+            pointerEvents: 'none',
+          }}
+        >
+          <RaceStartingScreen raceNumber={currentRace.numero ?? '---'} />
+        </div>
       )}
 
       {/* VIDEO — full screen fuera del layout */}

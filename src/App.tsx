@@ -161,6 +161,17 @@ function App() {
     tryFetch(0);
   };
 
+  // Contador de fallos consecutivos (ref para no causar re-renders)
+  const consecutiveFailuresRef = useRef(0);
+  const MAX_FAILURES = 3;
+
+  // Intervalo adaptativo según estado de carrera
+  const getPollInterval = (status: string) => {
+    if (status === 'CLOSED' || status === 'RUNNING') return 2000;  // momento crítico
+    if (status === 'OPEN') return 4000;                             // carrera abierta
+    return 8000;                                                    // sin carrera
+  };
+
   // 1. Fetch current race, history and game status
   const fetchData = async () => {
     try {
@@ -170,39 +181,53 @@ function App() {
         api.getGameStatus().catch(() => null),
       ]);
 
+      consecutiveFailuresRef.current = 0; // resetear al éxito
+
       if (gameStatus) {
         setJackpotAmount(Number(gameStatus.jackpotAmount ?? 0));
         setTrifectaBonusRate(Number(gameStatus.trifectaBonusRate ?? 0));
         setTrifectaBonusPool(Number(gameStatus.trifectaBonusPool ?? 0));
-        // x2Dog viene en el top-level del status, no dentro del objeto race
         if (race) race.x2Dog = gameStatus.x2Dog ?? 0;
       }
 
       setCurrentRace(race);
       setRaceHistory(history);
-
       setError(null);
     } catch (err: any) {
-      console.error('Error fetching basic race data:', err);
-      setError('Error al conectar con la API. Reintentando...');
+      consecutiveFailuresRef.current++;
+      // Solo mostrar error después de 3 fallos consecutivos
+      if (consecutiveFailuresRef.current >= MAX_FAILURES) {
+        setError('Sin conexión');
+      }
+      // Los datos anteriores se mantienen en pantalla (no se borran)
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-    // Connect websocket
     socket.connect();
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    // Poll current race data every 4 seconds
-    const interval = setInterval(fetchData, 4000);
+    const schedule = async () => {
+      await fetchData();
+      // Intervalo adaptativo según estado actual de la carrera
+      const status = (window as any).__raceStatus ?? 'IDLE';
+      timeoutId = setTimeout(schedule, getPollInterval(status));
+    };
+
+    schedule();
 
     return () => {
-      clearInterval(interval);
+      clearTimeout(timeoutId);
       socket.disconnect();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Exponer estado de carrera para el scheduler adaptativo
+  useEffect(() => {
+    (window as any).__raceStatus = currentRace?.status ?? 'IDLE';
+  }, [currentRace?.status]);
 
 
   // Detect jackpot win from race history

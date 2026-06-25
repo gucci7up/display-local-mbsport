@@ -327,10 +327,12 @@ function App() {
       setCurrentScreen('RACE_STARTING');
     } else if (status === 'RUNNING') {
       if (playedVideoRaceId !== currentRace.id) {
-        // Activar overlay imagen encima del video durante los primeros 3s
-        setShowStartingOverlay(true);
-        setStartingOverlayFading(false);
-        setCurrentScreen('VIDEO');
+        // No interrumpir si estamos mostrando resultados de la carrera anterior
+        if (currentScreen !== 'RESULTS') {
+          setShowStartingOverlay(true);
+          setStartingOverlayFading(false);
+          setCurrentScreen('VIDEO');
+        }
       } else {
         setCurrentScreen('RESULTS');
       }

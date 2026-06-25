@@ -87,20 +87,7 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
           padding: '28px 28px 20px',
         }}
       >
-        {/* Botón cerrar + countdown */}
-        <button
-          onClick={onClose}
-          className="absolute font-display font-black flex items-center justify-center rounded-full cursor-pointer"
-          style={{
-            top: 16, right: 16,
-            width: 42, height: 42,
-            background: 'rgba(255,255,255,0.1)',
-            border: '1.5px solid rgba(255,255,255,0.2)',
-            color: '#fff', fontSize: 18,
-          }}
-        >
-          ✕
-        </button>
+        {/* Countdown — solo visual, sin botón de cierre */}
 
         {/* Logo */}
         <div className="flex justify-center mb-4">

@@ -12,6 +12,7 @@ interface HeaderProps {
   isTransparent?: boolean;
   jackpotAmount?: number;
   trifectaBonusRate?: number;
+  trifectaBonusPool?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   isTransparent = false,
   jackpotAmount = 0,
   trifectaBonusRate = 0,
+  trifectaBonusPool = 0,
 }) => {
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -200,12 +202,12 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* BONUS TRIPLETA */}
+        {/* BONUS TRIPLETA — muestra el pozo acumulado */}
         {trifectaBonusRate > 0 && (
-          <div style={{ ...chip('#1a6b3a'), minWidth: 130, borderTop: '2px solid #22c55e' }}>
+          <div style={{ ...chip('#1a6b3a'), minWidth: 145, borderTop: '2px solid #22c55e' }}>
             <span style={{ ...label, color: '#4ade80', fontSize: 10 }}>🏆 BONUS TRIPLETA</span>
-            <span style={{ fontSize: 22, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, color: '#4ade80' }}>
-              +{Math.round(trifectaBonusRate * 100)}%
+            <span style={{ fontSize: 20, fontWeight: 900, fontFamily: 'monospace', lineHeight: 1, color: '#4ade80' }}>
+              ${trifectaBonusPool.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
         )}

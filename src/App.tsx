@@ -49,6 +49,19 @@ function App() {
     (window as any).setModeDebug = setDebugMode;
   }, [debugMode]);
 
+  // Auto-fullscreen cuando la página carga (funciona en modo --app de Edge/Chrome)
+  useEffect(() => {
+    const tryFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    };
+    // Intentar inmediatamente y también tras un pequeño delay
+    tryFullscreen();
+    const t = setTimeout(tryFullscreen, 800);
+    return () => clearTimeout(t);
+  }, []);
+
   // Dynamic status-aware messages for the bottom ESPN-style ticker
   const getTickerMessages = () => {
     const num = currentRace?.numero || '---';
@@ -155,26 +168,36 @@ function App() {
 
     if (!raceId) return;
 
-    // Esperar que el backend tenga el resultado real (carrera liquidada)
-    // Verificar que winners tenga datos antes de mostrar el modal
+    // Usar getRaceHistory (endpoint público) para obtener el resultado de la carrera
+    // El endpoint /races/:id/results requiere auth y el display no tiene token
     const tryFetch = (attempt: number) => {
-      api.getRaceResults(raceId)
-        .then(results => {
-          const hasRealData = results?.winners?.trifecta || results?.winners?.exacta || results?.winners?.winner || results?.resultado;
-          if (hasRealData) {
-            setFinishedRaceResults(results);
+      api.getRaceHistory(10)
+        .then((history: any[]) => {
+          const finished = history.find((r: any) => r.id === raceId);
+          if (finished?.resultado) {
+            const parts = finished.resultado.split('-').map(Number);
+            const w1 = parts[0] || 1;
+            const w2 = parts[1] || 2;
+            const w3 = parts[2] || 3;
+            setFinishedRaceResults({
+              resultado: finished.resultado,
+              winners: {
+                winner:   String(w1),
+                exacta:   `${w1}-${w2}`,
+                trifecta: `${w1}-${w2}-${w3}`,
+              },
+            });
             setShowResultsModal(true);
-          } else if (attempt < 10) {
+          } else if (attempt < 12) {
             // Backend aún no liquidó — reintentar cada 1.5s
             setTimeout(() => tryFetch(attempt + 1), 1500);
           } else {
-            // Máximo 10 intentos — mostrar igualmente
-            if (results) setFinishedRaceResults(results);
+            // Máximo 12 intentos — mostrar igualmente aunque no haya datos
             setShowResultsModal(true);
           }
         })
         .catch(() => {
-          if (attempt < 10) setTimeout(() => tryFetch(attempt + 1), 1500);
+          if (attempt < 12) setTimeout(() => tryFetch(attempt + 1), 1500);
           else setShowResultsModal(true);
         });
     };

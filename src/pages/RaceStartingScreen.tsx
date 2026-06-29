@@ -7,21 +7,20 @@ interface RaceStartingScreenProps {
 export const RaceStartingScreen: React.FC<RaceStartingScreenProps> = ({ raceNumber }) => {
   return (
     <div className="fixed inset-0 z-[10000] bg-black">
-      {/* Imagen full screen */}
-      <img
-        src="/race-starting.jpg"
-        alt="Ya va a comenzar la carrera"
-        className="w-full h-full object-cover"
-      />
-
-      {/* Badge número de carrera - esquina superior izquierda */}
-      <div className="absolute top-6 left-6 flex items-center gap-2 bg-[#D4AF37] rounded-xl px-5 py-3 shadow-2xl">
-        <span className="text-black font-black text-lg tracking-widest uppercase leading-none">
-          CARRERA
-        </span>
-        <span className="text-black font-black text-4xl leading-none tracking-tight">
-          #{raceNumber}
-        </span>
+      <img src="/race-starting.jpg" alt="Ya va a comenzar" className="w-full h-full object-cover" />
+      <div className="absolute top-6 left-6 shadow-2xl" style={{
+        background: 'linear-gradient(135deg, #f5c518, #e0a800)',
+        borderRadius: 12,
+        padding: '10px 24px',
+        border: '2px solid rgba(255,255,255,0.3)',
+        boxShadow: '0 4px 24px rgba(245,197,24,0.5)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        lineHeight: 1,
+      }}>
+        <span style={{ color: '#000', fontWeight: 900, fontSize: 16, letterSpacing: '0.3em', textTransform: 'uppercase' }}>CARRERA</span>
+        <span style={{ color: '#000', fontWeight: 900, fontSize: 52, letterSpacing: '0.05em', lineHeight: 1.1 }}>#{raceNumber}</span>
       </div>
     </div>
   );

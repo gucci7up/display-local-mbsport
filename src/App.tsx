@@ -4,8 +4,8 @@ import { JackpotAnimation } from './components/JackpotAnimation';
 import { X2Animation } from './components/X2Animation';
 import { BonusAnimation } from './components/BonusAnimation';
 import { Lobby } from './pages/Lobby';
-import { DogsPresentation } from './pages/DogsPresentation';
 import { ExactaMatrix } from './pages/ExactaMatrix';
+import { RaceHistory } from './pages/RaceHistory';
 import { OfficialResults } from './pages/OfficialResults';
 import { ResultsModal } from './components/ResultsModal';
 import { VideoRace } from './pages/VideoRace';
@@ -15,7 +15,7 @@ import { AgencySetup } from './pages/AgencySetup';
 import { api } from './services/api';
 import { socket } from './services/socket';
 
-type ScreenType = 'LOBBY' | 'DOGS' | 'ODDS' | 'RACE_STARTING' | 'VIDEO' | 'RESULTS';
+type ScreenType = 'LOBBY' | 'ODDS' | 'HISTORY' | 'RACE_STARTING' | 'VIDEO' | 'RESULTS';
 
 function App() {
   const [unlocked, setUnlocked] = useState<boolean>(() => {
@@ -141,7 +141,7 @@ function App() {
   const bonusShownRaceIdRef = useRef<string | null>(null);
 
   // Rotation cycle state (only used in OPEN status)
-  const openScreens: ScreenType[] = ['LOBBY', 'DOGS', 'ODDS'];
+  const openScreens: ScreenType[] = ['LOBBY', 'ODDS', 'HISTORY'];
   const openScreenIndexRef = useRef<number>(0);
   const rotationTimerRef = useRef<number | null>(null);
 
@@ -343,9 +343,9 @@ function App() {
     if (status === 'OPEN' || (status === 'FINISHED' && shownResultsRaceId === currentRace.id)) {
       // Tiempos por pantalla: ODDS = 30s protagonista, LOBBY/DOGS = 5s
       const screenDuration: Record<string, number> = {
-        LOBBY: 5000,
-        DOGS:  5000,
-        ODDS:  30000,
+        LOBBY:   10000,
+        ODDS:    30000,
+        HISTORY: 10000,
       };
 
       if (!openScreens.includes(currentScreen)) {
@@ -442,16 +442,16 @@ function App() {
 
     switch (currentScreen) {
       case 'LOBBY':
-        screenComponent = <Lobby raceHistory={raceHistory} liveOdds={liveOdds} />;
+        screenComponent = <Lobby currentRace={currentRace} jackpotAmount={jackpotAmount} bonusAmount={trifectaBonusPool} liveOdds={liveOdds} />;
         transitionClass = 'animate-fade-in-lobby';
         break;
-      case 'DOGS':
-        screenComponent = <DogsPresentation liveOdds={liveOdds} />;
-        transitionClass = 'animate-fade-slide-dogs';
-        break;
       case 'ODDS':
-        screenComponent = <ExactaMatrix liveOdds={liveOdds} raceHistory={raceHistory} />;
+        screenComponent = <ExactaMatrix liveOdds={liveOdds} raceHistory={raceHistory} currentRace={currentRace} />;
         transitionClass = 'animate-fade-odds';
+        break;
+      case 'HISTORY':
+        screenComponent = <RaceHistory raceHistory={raceHistory} />;
+        transitionClass = 'animate-fade-in-lobby';
         break;
       case 'RACE_STARTING':
       case 'VIDEO':
@@ -469,7 +469,7 @@ function App() {
         transitionClass = 'animate-fade-out-slide-up-results';
         break;
       default:
-        screenComponent = <Lobby raceHistory={raceHistory} liveOdds={liveOdds} />;
+        screenComponent = <Lobby currentRace={currentRace} jackpotAmount={jackpotAmount} bonusAmount={trifectaBonusPool} liveOdds={liveOdds} />;
         transitionClass = 'animate-fade-in-lobby';
     }
 

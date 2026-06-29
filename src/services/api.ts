@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = '/api-proxy';
+const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.mbsport.lat';
 const DEFAULT_EMAIL = 'display@mbsport.com';
 const DEFAULT_PASSWORD = '20260615';
 const AGENCY_STORAGE_KEY = 'display_agency_id';
